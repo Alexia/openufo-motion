@@ -42,6 +42,15 @@ void startCom() {
 
 void loop() {
 	readLimitSwitches();
+	// States:
+	// Parked, Attract Mode
+	// Parked, Credit(s)
+	// Moving Gantry (Player has control)
+	// Grabbing (Player loses control)
+	// Parking (Claw closed)
+	// Drop
+	// Prize Detection (Detect/Timeout)
+	//(Loop)
 }
 
 void readLimitSwitches() {
@@ -68,7 +77,11 @@ void setDefaultSpeed() {
 	MT_UD.setSpeed(DEFAULT_SPEED_UD);
 	MT_FB.setSpeed(DEFAULT_SPEED_FB);
 	MT_LR.setSpeed(DEFAULT_SPEED_LR);
-	CLAW.setSpeed(DEFAULT_SPEED_CLAW);
+	CLAW.setSpeed(DEFAULT_STRENGTH_CLAW);
+}
+
+bool isAllParked() {
+	return gantryParked && clawParked;
 }
 
 bool parkAll() {
@@ -161,11 +174,13 @@ void moveFB(int dir) {
 	switch (dir) {
 		case 1: // Forward
 			if (!isFLimitTriggered()) {
+				gantryParked = false;
 				MT_FB.run(BACKWARD); // I'm not swapping the wires.  *Angry elf noises.*
 			}
 			break;
 		case -1: // Backward
 			if (!isBLimitTriggered()) {
+				gantryParked = false;
 				MT_FB.run(FORWARD);
 			}
 			break;
@@ -183,10 +198,12 @@ void moveLR(int dir) {
 	switch (dir) {
 		case 1: // Right
 			// No limit switch installed.
+			gantryParked = false;
 			MT_LR.run(BACKWARD);
 			break;
 		case -1: // Left
 			if (!isLLimitTriggered()) {
+				gantryParked = false;
 				MT_LR.run(FORWARD);
 			}
 			break;
@@ -204,11 +221,13 @@ void moveUD(int dir) {
 	switch (dir) {
 		case 1: // Up
 			if (!isULimitTriggered()) {
+				clawParked = false;
 				MT_UD.run(BACKWARD);
 			}
 			break;
 		case -1: // Down
 			if (!isDLimitTriggered()) {
+				clawParked = false;
 				MT_UD.run(FORWARD);
 			}
 			break;
