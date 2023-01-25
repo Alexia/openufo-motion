@@ -222,10 +222,10 @@ void moveUD(int dir) {
 // 1 = Close
 // 0 = Open
 void moveClaw(int state) {
-	// Forward and backward closes the claw.
+	// Forward and backward closes the claw, but forward(in this wiring configuration) has the best holding force.
 	switch (state) {
 		case 1: // Close
-			CLAW.run(BACKWARD);
+			CLAW.run(FORWARD);
 			break;
 		case 0: // Stop
 		default:
