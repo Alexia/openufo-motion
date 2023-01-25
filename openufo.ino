@@ -18,6 +18,18 @@ bool gantryParked = false;
 
 SerialTransfer com;
 
+#define STATE_ERROR -2
+#define STATE_BOOT -1
+#define STATE_PARKED_ATTRACT 0
+#define STATE_PARKED_CREDITS 1
+#define STATE_PLAYER_CONTROL 2
+#define STATE_GRABBING 3
+#define STATE_PARKING 4
+#define STATE_DROPPING 5
+#define STATE_PRIZE_DETECT 6
+
+int currentState = -1;
+
 void setup() {
 	pinMode(SW_LIMIT_F_PIN, INPUT_PULLUP); // Gantry Forward Limit
 	pinMode(SW_LIMIT_B_PIN, INPUT_PULLUP); // Gantry Backward Limit
@@ -30,19 +42,22 @@ void setup() {
 	setDefaultSpeed();
 	clack();
 
-	parkAll();
+	if (parkAll()) {
+		currentState = STATE_PARKED_ATTRACT;
+	} else {
+		currentState = STATE_ERROR;
+	}
 
 	pinMode(LED_BUILTIN, OUTPUT);
-}
-
-void startCom() {
-	Serial.begin(115200);
-	com.begin(Serial);
+	digitalWrite(LED_BUILTIN, LOW);
 }
 
 void loop() {
-	readLimitSwitches();
+	readLimitSwitches(); // Never be afraid to throw this anywhere.
+
 	// States:
+	// Boot
+	// (Loop ->)
 	// Parked, Attract Mode
 	// Parked, Credit(s)
 	// Moving Gantry (Player has control)
@@ -50,7 +65,65 @@ void loop() {
 	// Parking (Claw closed)
 	// Drop
 	// Prize Detection (Detect/Timeout)
-	//(Loop)
+	// (<- Loop)
+	switch (currentState) {
+		case STATE_BOOT:
+		case STATE_ERROR:
+			// If we are in an error state or failed boot prevent all operations until powered off.
+			// This is intended for safety to prevent damage to the machine and operator.
+			while (1) {
+				digitalWrite(LED_BUILTIN, HIGH);
+				delay(500);
+				digitalWrite(LED_BUILTIN, LOW);
+				delay(500);
+			}
+			break;
+		case STATE_PARKED_ATTRACT:
+			// If credits exist, short circuit and transition to STATE_PARKED_CREDITS.
+			// Drop button LED is off.
+			// RGB doing its thing.
+			// Input does nothing.
+			// Adding credit triggers transition to STATE_PARKED_CREDITS.
+			break;
+		case STATE_PARKED_CREDITS:
+			// Drop button LED is pulsing.
+			// RGB doing its thing.
+			// Input allowed from joystick only; triggers transition to STATE_PLAYER_CONTROL.
+			break;
+		case STATE_PLAYER_CONTROL:
+			// Play timer begins.
+			// Drop button LED is solid.
+			// Drop button input triggers transition to STATE_GRABBING.
+			break;
+		case STATE_GRABBING:
+			// Drop button LED is off.
+			// Player loses all control.
+			// Move claw down.  dropClaw()?  grab()?
+			// Grab
+			// Move claw up.  parkClaw()
+			// isClawParked() triggers transition to STATE_PARKING.
+			break;
+		case STATE_PARKING:
+			// parkAll()
+			// isAllParked() triggers transition to STATE_PARKING.
+			break;
+		case STATE_DROPPING:
+			// Open the claw
+			// No trigger, automatic transition to STATE_PRIZE_DETECT.
+			break;
+		case STATE_PRIZE_DETECT:
+			// while (prize not detected) ->
+			// if (prize detected) -> CELEBRATE! -> Transition to STATE_PARKED_ATTRACT
+			// if (timeout reached) -> Aww :( -> Transition to STATE_PARKED_ATTRACT
+			break;
+		default:
+			break;
+	}
+}
+
+void startCom() {
+	Serial.begin(115200);
+	com.begin(Serial);
 }
 
 void readLimitSwitches() {
@@ -82,6 +155,14 @@ void setDefaultSpeed() {
 
 bool isAllParked() {
 	return gantryParked && clawParked;
+}
+
+bool isClawParked() {
+	return clawParked;
+}
+
+bool isGantryParked() {
+	return gantryParked;
 }
 
 bool parkAll() {
@@ -171,6 +252,7 @@ bool isDLimitTriggered() {
 // 0 = Stop
 //-1 = Backwards away from the player.
 void moveFB(int dir) {
+	readLimitSwitches();
 	switch (dir) {
 		case 1: // Forward
 			if (!isFLimitTriggered()) {
@@ -195,6 +277,7 @@ void moveFB(int dir) {
 // 0 = Stop
 //-1 = Left towards the left side of the machine.
 void moveLR(int dir) {
+	readLimitSwitches();
 	switch (dir) {
 		case 1: // Right
 			// No limit switch installed.
@@ -218,6 +301,7 @@ void moveLR(int dir) {
 // 0 = Stop
 //-1 = Down
 void moveUD(int dir) {
+	readLimitSwitches();
 	switch (dir) {
 		case 1: // Up
 			if (!isULimitTriggered()) {
