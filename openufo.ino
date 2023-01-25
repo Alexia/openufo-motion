@@ -1,5 +1,6 @@
 #include "config.h"
 #include <AFMotor.h>
+#include <SerialTransfer.h>
 
 int LIMIT_F = 0;
 int LIMIT_B = 0;
@@ -7,13 +8,15 @@ int LIMIT_U = 0;
 int LIMIT_D = 0;
 int LIMIT_L = 0;
 
-AF_DCMotor MT_UD(1, MOTOR34_8KHZ);
-AF_DCMotor CLAW(2, MOTOR34_8KHZ);
-AF_DCMotor MT_FB(3, MOTOR34_8KHZ);
-AF_DCMotor MT_LR(4, MOTOR34_8KHZ);
+AF_DCMotor MT_UD(1, MOTOR12_64KHZ);
+AF_DCMotor CLAW(2, MOTOR12_64KHZ);
+AF_DCMotor MT_FB(3, MOTOR34_64KHZ);
+AF_DCMotor MT_LR(4, MOTOR34_64KHZ);
 
 bool clawParked = false;
-bool gantryParked = true;
+bool gantryParked = false;
+
+SerialTransfer com;
 
 void setup() {
 	pinMode(SW_LIMIT_F_PIN, INPUT_PULLUP); // Gantry Forward Limit
@@ -23,23 +26,22 @@ void setup() {
 	pinMode(SW_LIMIT_L_PIN, INPUT_PULLUP); // Gantry Left Limit
 	readLimitSwitches();				   // Get the initial limit switch state.
 
-	Serial.begin(115200);
+	startCom();
 	setDefaultSpeed();
 	clack();
+
+	parkAll();
 
 	pinMode(LED_BUILTIN, OUTPUT);
 }
 
+void startCom() {
+	Serial.begin(115200);
+	com.begin(Serial);
+}
+
 void loop() {
 	readLimitSwitches();
-	Serial.print(LIMIT_F);
-	Serial.print(LIMIT_B);
-	Serial.print(LIMIT_U);
-	Serial.print(LIMIT_D);
-	Serial.print(LIMIT_L);
-	Serial.println();
-	delay(100);
-	parkAll();
 }
 
 void readLimitSwitches() {
@@ -52,8 +54,9 @@ void readLimitSwitches() {
 
 // CLACK!  Releases tension on the claw string and does a claw check.
 void clack() {
+	readLimitSwitches();
 	moveUD(-1);
-	delay(1000);
+	delay(500);
 	moveUD(0);
 	moveClaw(1);
 	delay(100);
@@ -69,6 +72,8 @@ void setDefaultSpeed() {
 }
 
 bool parkAll() {
+	readLimitSwitches();
+
 	// Park the claw first so it does not crash into anything while parking the gantry.
 	if (!parkClaw()) {
 		return false;
