@@ -18,6 +18,7 @@ bool gantryParked = false;
 
 SerialTransfer com;
 
+#define STATE_PROGRAM -3
 #define STATE_ERROR -2
 #define STATE_BOOT -1
 #define STATE_PARKED_ATTRACT 0
@@ -31,12 +32,8 @@ SerialTransfer com;
 int currentState = -1;
 
 void setup() {
-	pinMode(SW_LIMIT_F_PIN, INPUT_PULLUP); // Gantry Forward Limit
-	pinMode(SW_LIMIT_B_PIN, INPUT_PULLUP); // Gantry Backward Limit
-	pinMode(SW_LIMIT_U_PIN, INPUT_PULLUP); // Claw Up Limit
-	pinMode(SW_LIMIT_D_PIN, INPUT_PULLUP); // Claw Down Limit
-	pinMode(SW_LIMIT_L_PIN, INPUT_PULLUP); // Gantry Left Limit
-	readLimitSwitches();				   // Get the initial limit switch state.
+	initSwitches();
+	initLights();
 
 	startCom();
 	setDefaultSpeed();
@@ -47,9 +44,29 @@ void setup() {
 	} else {
 		currentState = STATE_ERROR;
 	}
+}
 
-	pinMode(LED_BUILTIN, OUTPUT);
-	digitalWrite(LED_BUILTIN, LOW);
+void initSwitches() {
+	pinMode(SW_LIMIT_F_PIN, INPUT_PULLUP); // Gantry Forward Limit
+	pinMode(SW_LIMIT_B_PIN, INPUT_PULLUP); // Gantry Backward Limit
+	pinMode(SW_LIMIT_U_PIN, INPUT_PULLUP); // Claw Up Limit
+	pinMode(SW_LIMIT_D_PIN, INPUT_PULLUP); // Claw Down Limit
+	pinMode(SW_LIMIT_L_PIN, INPUT_PULLUP); // Gantry Left Limit
+	readLimitSwitches();				   // Get the initial limit switch state.
+
+	pinMode(SW_DIR_F_PIN, INPUT_PULLUP);		  // Joystick Forward
+	pinMode(SW_DIR_B_PIN, INPUT_PULLUP);		  // Joystick Backward
+	pinMode(SW_DIR_L_PIN, INPUT_PULLUP);		  // Joystick Left
+	pinMode(SW_DIR_R_PIN, INPUT_PULLUP);		  // Joystick Right
+	pinMode(SW_DIR_D_PIN, INPUT_PULLUP);		  // Down/Drop Button
+	pinMode(SW_TOKEN_CREDIT_PIN, INPUT_PULLUP);	  // Token Credit/Coin Mechanism
+	pinMode(SW_SERVICE_CREDIT_PIN, INPUT_PULLUP); // Service Credit Button
+	pinMode(SW_PROGRAM_PIN, INPUT_PULLUP);		  // Program Button
+}
+
+void initLights() {
+	pinMode(LED_ERROR_PIN, OUTPUT);
+	digitalWrite(LED_ERROR_PIN, LOW);
 }
 
 void loop() {
@@ -67,14 +84,16 @@ void loop() {
 	// Prize Detection (Detect/Timeout)
 	// (<- Loop)
 	switch (currentState) {
+		case STATE_PROGRAM:
+			// Programming mode blocks all other states until it exits.
 		case STATE_BOOT:
 		case STATE_ERROR:
 			// If we are in an error state or failed boot prevent all operations until powered off.
 			// This is intended for safety to prevent damage to the machine and operator.
 			while (1) {
-				digitalWrite(LED_BUILTIN, HIGH);
+				digitalWrite(LED_ERROR_PIN, HIGH);
 				delay(500);
-				digitalWrite(LED_BUILTIN, LOW);
+				digitalWrite(LED_ERROR_PIN, LOW);
 				delay(500);
 			}
 			break;
