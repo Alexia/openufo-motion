@@ -311,12 +311,16 @@ void moveUD(int dir) {
 			if (!isULimitTriggered()) {
 				clawParked = false;
 				MT_UD.run(BACKWARD);
+			} else {
+				MT_UD.run(RELEASE);
 			}
 			break;
 		case -1: // Down
 			if (!isDLimitTriggered()) {
 				clawParked = false;
 				MT_UD.run(FORWARD);
+			} else {
+				MT_UD.run(RELEASE);
 			}
 			break;
 		case 0: // Stop
