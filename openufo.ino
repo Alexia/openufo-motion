@@ -18,6 +18,9 @@ bool gantryParked = false;
 
 SerialTransfer com;
 
+#define NUM_SW 13
+const uint8_t SW_PINS[NUM_SW] = {SW_LIMIT_F_PIN, SW_LIMIT_B_PIN, SW_LIMIT_U_PIN, SW_LIMIT_D_PIN, SW_LIMIT_L_PIN, SW_DIR_F_PIN, SW_DIR_B_PIN, SW_DIR_L_PIN, SW_DIR_R_PIN, SW_DIR_D_PIN, SW_TOKEN_CREDIT_PIN, SW_SERVICE_CREDIT_PIN, SW_PROGRAM_PIN};
+
 #define STATE_PROGRAM -3
 #define STATE_ERROR -2
 #define STATE_BOOT -1
@@ -47,21 +50,10 @@ void setup() {
 }
 
 void initSwitches() {
-	pinMode(SW_LIMIT_F_PIN, INPUT_PULLUP); // Gantry Forward Limit
-	pinMode(SW_LIMIT_B_PIN, INPUT_PULLUP); // Gantry Backward Limit
-	pinMode(SW_LIMIT_U_PIN, INPUT_PULLUP); // Claw Up Limit
-	pinMode(SW_LIMIT_D_PIN, INPUT_PULLUP); // Claw Down Limit
-	pinMode(SW_LIMIT_L_PIN, INPUT_PULLUP); // Gantry Left Limit
-	readLimitSwitches();				   // Get the initial limit switch state.
-
-	pinMode(SW_DIR_F_PIN, INPUT_PULLUP);		  // Joystick Forward
-	pinMode(SW_DIR_B_PIN, INPUT_PULLUP);		  // Joystick Backward
-	pinMode(SW_DIR_L_PIN, INPUT_PULLUP);		  // Joystick Left
-	pinMode(SW_DIR_R_PIN, INPUT_PULLUP);		  // Joystick Right
-	pinMode(SW_DIR_D_PIN, INPUT_PULLUP);		  // Down/Drop Button
-	pinMode(SW_TOKEN_CREDIT_PIN, INPUT_PULLUP);	  // Token Credit/Coin Mechanism
-	pinMode(SW_SERVICE_CREDIT_PIN, INPUT_PULLUP); // Service Credit Button
-	pinMode(SW_PROGRAM_PIN, INPUT_PULLUP);		  // Program Button
+	for (int i = 0; i < NUM_SW; i++) {
+		pinMode(SW_PINS[i], INPUT_PULLUP);
+	}
+	updateSwitches();
 }
 
 void initLights() {
@@ -70,8 +62,13 @@ void initLights() {
 }
 
 void loop() {
-	readLimitSwitches(); // Never be afraid to throw this anywhere.
-
+	updateSwitches();
+	Serial.print(LIMIT_F);
+	Serial.print(LIMIT_B);
+	Serial.print(LIMIT_U);
+	Serial.print(LIMIT_D);
+	Serial.print(LIMIT_L);
+	Serial.println();
 	// States:
 	// Boot
 	// (Loop ->)
@@ -143,6 +140,13 @@ void loop() {
 void startCom() {
 	Serial.begin(115200);
 	com.begin(Serial);
+}
+
+void updateSwitches() {
+	/*for (int i = 0; i < NUM_SW; i++) {
+		digitalRead(SW_PINS[i]);
+	}*/
+	readLimitSwitches();
 }
 
 void readLimitSwitches() {
@@ -222,7 +226,7 @@ bool parkClaw() {
 bool parkGantry() {
 	unsigned long startMillis = millis();
 	unsigned long currentMillis = 0;
-	while (!isFLimitTriggered() || !isLLimitTriggered()) {
+	while (!isFLimitTriggered() && !isLLimitTriggered()) {
 		readLimitSwitches();
 
 		if (!isFLimitTriggered()) {
