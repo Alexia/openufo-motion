@@ -1,38 +1,4 @@
-#include "config.h"
-#include <AFMotor.h>
-#include <SerialTransfer.h>
-
-int LIMIT_F = 0;
-int LIMIT_B = 0;
-int LIMIT_U = 0;
-int LIMIT_D = 0;
-int LIMIT_L = 0;
-
-AF_DCMotor MT_UD(1, MOTOR12_64KHZ);
-AF_DCMotor CLAW(2, MOTOR12_64KHZ);
-AF_DCMotor MT_FB(3, MOTOR34_64KHZ);
-AF_DCMotor MT_LR(4, MOTOR34_64KHZ);
-
-bool clawParked = false;
-bool gantryParked = false;
-
-SerialTransfer com;
-
-#define NUM_SW 13
-const uint8_t SW_PINS[NUM_SW] = {SW_LIMIT_F_PIN, SW_LIMIT_B_PIN, SW_LIMIT_U_PIN, SW_LIMIT_D_PIN, SW_LIMIT_L_PIN, SW_DIR_F_PIN, SW_DIR_B_PIN, SW_DIR_L_PIN, SW_DIR_R_PIN, SW_DIR_D_PIN, SW_TOKEN_CREDIT_PIN, SW_SERVICE_CREDIT_PIN, SW_PROGRAM_PIN};
-
-#define STATE_PROGRAM -3
-#define STATE_ERROR -2
-#define STATE_BOOT -1
-#define STATE_PARKED_ATTRACT 0
-#define STATE_PARKED_CREDITS 1
-#define STATE_PLAYER_CONTROL 2
-#define STATE_GRABBING 3
-#define STATE_PARKING 4
-#define STATE_DROPPING 5
-#define STATE_PRIZE_DETECT 6
-
-int currentState = -1;
+#include "openufo.h"
 
 void setup() {
 	initSwitches();
@@ -40,6 +6,8 @@ void setup() {
 
 	startCom();
 	setDefaultSpeed();
+	delay(1000); // Give time for all boards to boot and setup communication.
+
 	clack();
 
 	if (parkAll()) {
@@ -63,12 +31,7 @@ void initLights() {
 
 void loop() {
 	updateSwitches();
-	Serial.print(LIMIT_F);
-	Serial.print(LIMIT_B);
-	Serial.print(LIMIT_U);
-	Serial.print(LIMIT_D);
-	Serial.print(LIMIT_L);
-	Serial.println();
+
 	// States:
 	// Boot
 	// (Loop ->)
@@ -166,6 +129,7 @@ void clack() {
 	moveClaw(1);
 	delay(100);
 	moveClaw(0);
+	delay(500);
 }
 
 // Sets a default speed for all motors.
@@ -225,30 +189,26 @@ bool parkClaw() {
 
 bool parkGantry() {
 	unsigned long startMillis = millis();
-	unsigned long currentMillis = 0;
-	while (!isFLimitTriggered() && !isLLimitTriggered()) {
-		readLimitSwitches();
+	unsigned long currentMillis = startMillis;
 
-		if (!isFLimitTriggered()) {
-			moveFB(1);
-		} else {
-			moveFB(0);
-		}
+	currentGantryMove.fb = G_FORWARD;
+	currentGantryMove.lr = G_LEFT;
 
-		if (!isLLimitTriggered()) {
-			moveLR(-1);
-		} else {
-			moveLR(0);
-		}
-
+	while ((!isFLimitTriggered() || !isLLimitTriggered()) && currentMillis - startMillis < 4000) {
 		currentMillis = millis();
-		if ((!isFLimitTriggered() || !isLLimitTriggered()) && currentMillis - startMillis >= 2000) {
-			// Error state, took too long.
-			return false;
+		updateGantryMove();
+		if (isFLimitTriggered() && isLLimitTriggered()) {
+			gantryParked = true;
+			return true;
 		}
 	}
-	gantryParked = true;
-	return true;
+
+	emergencyStop();
+	currentGantryMove.fb = G_STOP;
+	currentGantryMove.lr = G_STOP;
+
+	// Error state, took too long.
+	return false;
 }
 
 bool isFLimitTriggered() {
@@ -271,6 +231,18 @@ bool isDLimitTriggered() {
 	return LIMIT_D == 0;
 }
 
+void updateGantryMove() {
+	moveFB(currentGantryMove.fb);
+	moveLR(currentGantryMove.lr);
+}
+
+void emergencyStop() {
+	// Use an explicit stop that bypasses any code fluff.
+	MT_FB.run(RELEASE);
+	MT_LR.run(RELEASE);
+	MT_UD.run(RELEASE);
+}
+
 // 1 = Forwards towards the player.
 // 0 = Stop
 //-1 = Backwards away from the player.
@@ -281,12 +253,18 @@ void moveFB(int dir) {
 			if (!isFLimitTriggered()) {
 				gantryParked = false;
 				MT_FB.run(BACKWARD); // I'm not swapping the wires.  *Angry elf noises.*
+			} else {
+				currentGantryMove.fb = 0;
+				MT_FB.run(RELEASE);
 			}
 			break;
 		case -1: // Backward
 			if (!isBLimitTriggered()) {
 				gantryParked = false;
 				MT_FB.run(FORWARD);
+			} else {
+				currentGantryMove.fb = 0;
+				MT_FB.run(RELEASE);
 			}
 			break;
 		case 0: // Stop
@@ -311,6 +289,9 @@ void moveLR(int dir) {
 			if (!isLLimitTriggered()) {
 				gantryParked = false;
 				MT_LR.run(FORWARD);
+			} else {
+				currentGantryMove.lr = 0;
+				MT_LR.run(RELEASE);
 			}
 			break;
 		case 0: // Stop
