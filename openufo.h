@@ -51,3 +51,12 @@ struct gantryMove {
 };
 
 gantryMove currentGantryMove = {G_STOP, G_STOP};
+
+// 0 - Off
+// 1 - Flashing
+// 2 - Solid
+int dropButtonLEDState = 0;
+
+// Use these millisecond tracker for any LEDs that need to flash to keep them in unison.
+unsigned long flashLEDLastMillis = 0;
+unsigned long flashLEDCurrentState = LOW;

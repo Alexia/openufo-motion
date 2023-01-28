@@ -33,24 +33,15 @@ void initLights() {
 	digitalWrite(LED_DROP_BUTTON_PIN, LOW);
 }
 
+void updateLEDLastMillis() {
+	if (millis() - flashLEDLastMillis >= 500) {
+		flashLEDLastMillis = millis();
+		flashLEDCurrentState = !flashLEDCurrentState;
+	}
+}
+
 void loop() {
 	updateSwitches();
-
-	if (PLAYER_F) {
-		currentGantryMove.fb = G_FORWARD;
-	} else if (PLAYER_B) {
-		currentGantryMove.fb = G_BACKWARD;
-	} else {
-		currentGantryMove.fb = G_STOP;
-	}
-	if (PLAYER_L) {
-		currentGantryMove.lr = G_LEFT;
-	} else if (PLAYER_R) {
-		currentGantryMove.lr = G_RIGHT;
-	} else {
-		currentGantryMove.lr = G_STOP;
-	}
-	updateGantryMove();
 
 	// States:
 	// Boot
@@ -80,19 +71,57 @@ void loop() {
 		case STATE_PARKED_ATTRACT:
 			// If credits exist, short circuit and transition to STATE_PARKED_CREDITS.
 			// Drop button LED is off.
-			// RGB doing its thing.
+			if (dropButtonLEDState != 0) {
+				digitalWrite(LED_DROP_BUTTON_PIN, LOW);
+				dropButtonLEDState = 0;
+			}
+
 			// Input does nothing.
 			// Adding credit triggers transition to STATE_PARKED_CREDITS.
 			break;
 		case STATE_PARKED_CREDITS:
-			// Drop button LED is pulsing.
-			// RGB doing its thing.
+			// Drop button LED is flashing.
+			if (dropButtonLEDState != 1) {
+				dropButtonLEDState = 1;
+			} else {
+				digitalWrite(LED_DROP_BUTTON_PIN, flashLEDCurrentState);
+			}
+
 			// Input allowed from joystick only; triggers transition to STATE_PLAYER_CONTROL.
+			if (PLAYER_F || PLAYER_B || PLAYER_L || PLAYER_R) {
+				currentState = STATE_PLAYER_CONTROL;
+			}
 			break;
 		case STATE_PLAYER_CONTROL:
-			// Play timer begins.
+			// TODO: Play timer begins.
 			// Drop button LED is solid.
+			if (dropButtonLEDState != 2) {
+				digitalWrite(LED_DROP_BUTTON_PIN, HIGH);
+				dropButtonLEDState = 2;
+			}
+
 			// Drop button input triggers transition to STATE_GRABBING.
+			if (PLAYER_D) {
+				currentGantryMove.fb = G_STOP;
+				currentGantryMove.lr = G_STOP;
+				currentState = STATE_GRABBING;
+			}
+
+			if (PLAYER_F) {
+				currentGantryMove.fb = G_FORWARD;
+			} else if (PLAYER_B) {
+				currentGantryMove.fb = G_BACKWARD;
+			} else {
+				currentGantryMove.fb = G_STOP;
+			}
+			if (PLAYER_L) {
+				currentGantryMove.lr = G_LEFT;
+			} else if (PLAYER_R) {
+				currentGantryMove.lr = G_RIGHT;
+			} else {
+				currentGantryMove.lr = G_STOP;
+			}
+			updateGantryMove();
 			break;
 		case STATE_GRABBING:
 			// Drop button LED is off.
