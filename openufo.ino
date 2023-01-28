@@ -42,6 +42,8 @@ void updateLEDLastMillis() {
 
 void loop() {
 	updateSwitches();
+	updateGantryMove(); // MUST HAPPEN OUTSIDE OF THE STATES!  Otherwise moves or stops may never occur.
+	updateLEDLastMillis();
 
 	// States:
 	// Boot
@@ -50,8 +52,6 @@ void loop() {
 	// Parked, Credit(s)
 	// Moving Gantry (Player has control)
 	// Grabbing (Player loses control)
-	// Parking (Claw closed)
-	// Drop
 	// Prize Detection (Detect/Timeout)
 	// (<- Loop)
 	switch (currentState) {
@@ -78,6 +78,11 @@ void loop() {
 
 			// Input does nothing.
 			// Adding credit triggers transition to STATE_PARKED_CREDITS.
+
+			if (!digitalRead(SW_TOKEN_CREDIT_PIN)) {
+				parkAll();
+				currentState = STATE_PARKED_CREDITS;
+			}
 			break;
 		case STATE_PARKED_CREDITS:
 			// Drop button LED is flashing.
@@ -121,28 +126,24 @@ void loop() {
 			} else {
 				currentGantryMove.lr = G_STOP;
 			}
-			updateGantryMove();
 			break;
 		case STATE_GRABBING:
-			// Drop button LED is off.
 			// Player loses all control.
-			// Move claw down.  dropClaw()?  grab()?
-			// Grab
-			// Move claw up.  parkClaw()
-			// isClawParked() triggers transition to STATE_PARKING.
-			break;
-		case STATE_PARKING:
-			// parkAll()
-			// isAllParked() triggers transition to STATE_PARKING.
-			break;
-		case STATE_DROPPING:
-			// Open the claw
-			// No trigger, automatic transition to STATE_PRIZE_DETECT.
+			// Drop button LED is off.
+			if (dropButtonLEDState != 0) {
+				digitalWrite(LED_DROP_BUTTON_PIN, LOW);
+				dropButtonLEDState = 0;
+			}
+
+			doGrab();
+
+			currentState = STATE_PRIZE_DETECT;
 			break;
 		case STATE_PRIZE_DETECT:
 			// while (prize not detected) ->
 			// if (prize detected) -> CELEBRATE! -> Transition to STATE_PARKED_ATTRACT
 			// if (timeout reached) -> Aww :( -> Transition to STATE_PARKED_ATTRACT
+			currentState = STATE_PARKED_ATTRACT;
 			break;
 		default:
 			break;
@@ -239,7 +240,7 @@ bool parkClaw() {
 	unsigned long startMillis = millis();
 	unsigned long currentMillis = startMillis;
 
-	while (!isClawParked() && currentMillis - startMillis < 2000) {
+	while (!isClawParked() && currentMillis - startMillis < 4000) {
 		currentMillis = millis();
 
 		if (!isClawParked()) {
@@ -400,6 +401,30 @@ void moveUD(int dir) {
 			MT_UD.run(RELEASE);
 			break;
 	}
+}
+
+void doGrab() {
+	unsigned long startMillis = millis();
+	unsigned long currentMillis = startMillis;
+
+	while (!isDLimitTriggered() && currentMillis - startMillis < 2000) {
+		currentMillis = millis();
+
+		if (!isDLimitTriggered()) {
+			moveUD(-1);
+		} else {
+			moveUD(0);
+		}
+
+		if (isDLimitTriggered()) {
+			break;
+		}
+	}
+
+	moveUD(0);
+	moveClaw(1);
+	parkAll();
+	moveClaw(0);
 }
 
 // 1 = Close

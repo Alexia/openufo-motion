@@ -23,7 +23,7 @@
 #define SW_DIR_D_PIN 44
 
 // Credits
-#define SW_TOKEN_CREDIT_PIN 42
+#define SW_TOKEN_CREDIT_PIN 41
 
 // Service Buttons
 #define SW_SERVICE_CREDIT_PIN 40
@@ -32,4 +32,4 @@
 
 // Lights
 #define LED_ERROR_PIN LED_BUILTIN
-#define LED_DROP_BUTTON_PIN 23
+#define LED_DROP_BUTTON_PIN 43
