@@ -8,13 +8,16 @@ int LIMIT_U = 0;
 int LIMIT_D = 0;
 int LIMIT_L = 0;
 
+int PLAYER_F = 0;
+int PLAYER_B = 0;
+int PLAYER_L = 0;
+int PLAYER_R = 0;
+int PLAYER_D = 0;
+
 AF_DCMotor MT_UD(1, MOTOR12_64KHZ);
 AF_DCMotor CLAW(2, MOTOR12_64KHZ);
 AF_DCMotor MT_FB(3, MOTOR34_64KHZ);
 AF_DCMotor MT_LR(4, MOTOR34_64KHZ);
-
-bool clawParked = false;
-bool gantryParked = false;
 
 SerialTransfer com;
 

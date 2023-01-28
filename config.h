@@ -6,6 +6,7 @@
 #define SW_LIMIT_L_PIN 51
 
 // Motor Speeds
+#define PARKING_SPEED 255
 #define DEFAULT_SPEED_FB 255 // 0-255
 #define DEFAULT_SPEED_LR 255 // 0-255
 #define DEFAULT_SPEED_UD 255 // 0-255
@@ -15,11 +16,11 @@
 #define DEFAULT_STRENGTH_CLAW 255 // 0-255
 
 // Player Input
-#define SW_DIR_F_PIN 44
+#define SW_DIR_F_PIN 48
 #define SW_DIR_B_PIN 46
-#define SW_DIR_L_PIN 48
-#define SW_DIR_R_PIN 50
-#define SW_DIR_D_PIN 52
+#define SW_DIR_L_PIN 50
+#define SW_DIR_R_PIN 52
+#define SW_DIR_D_PIN 44
 
 // Credits
 #define SW_TOKEN_CREDIT_PIN 42

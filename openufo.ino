@@ -5,7 +5,7 @@ void setup() {
 	initLights();
 
 	startCom();
-	setDefaultSpeed();
+	setParkingSpeed();
 	delay(1000); // Give time for all boards to boot and setup communication.
 
 	clack();
@@ -15,6 +15,7 @@ void setup() {
 	} else {
 		currentState = STATE_ERROR;
 	}
+	setDefaultSpeed();
 }
 
 void initSwitches() {
@@ -31,6 +32,22 @@ void initLights() {
 
 void loop() {
 	updateSwitches();
+
+	if (PLAYER_F) {
+		currentGantryMove.fb = G_FORWARD;
+	} else if (PLAYER_B) {
+		currentGantryMove.fb = G_BACKWARD;
+	} else {
+		currentGantryMove.fb = G_STOP;
+	}
+	if (PLAYER_L) {
+		currentGantryMove.lr = G_LEFT;
+	} else if (PLAYER_R) {
+		currentGantryMove.lr = G_RIGHT;
+	} else {
+		currentGantryMove.lr = G_STOP;
+	}
+	updateGantryMove();
 
 	// States:
 	// Boot
@@ -106,10 +123,16 @@ void startCom() {
 }
 
 void updateSwitches() {
-	/*for (int i = 0; i < NUM_SW; i++) {
-		digitalRead(SW_PINS[i]);
-	}*/
+	readPlayerSwitches();
 	readLimitSwitches();
+}
+
+void readPlayerSwitches() {
+	PLAYER_F = !digitalRead(SW_DIR_F_PIN);
+	PLAYER_B = !digitalRead(SW_DIR_B_PIN);
+	PLAYER_L = !digitalRead(SW_DIR_L_PIN);
+	PLAYER_R = !digitalRead(SW_DIR_R_PIN);
+	PLAYER_D = !digitalRead(SW_DIR_D_PIN);
 }
 
 void readLimitSwitches() {
@@ -140,16 +163,26 @@ void setDefaultSpeed() {
 	CLAW.setSpeed(DEFAULT_STRENGTH_CLAW);
 }
 
+// Sets a parking speed for all motors.
+void setParkingSpeed() {
+	MT_UD.setSpeed(PARKING_SPEED);
+	MT_FB.setSpeed(PARKING_SPEED);
+	MT_LR.setSpeed(PARKING_SPEED);
+	CLAW.setSpeed(DEFAULT_STRENGTH_CLAW);
+}
+
 bool isAllParked() {
-	return gantryParked && clawParked;
+	return isGantryParked() && isClawParked();
 }
 
 bool isClawParked() {
-	return clawParked;
+	readLimitSwitches();
+	return isULimitTriggered();
 }
 
 bool isGantryParked() {
-	return gantryParked;
+	readLimitSwitches();
+	return isFLimitTriggered() && isLLimitTriggered();
 }
 
 bool parkAll() {
@@ -166,39 +199,52 @@ bool parkAll() {
 }
 
 bool parkClaw() {
+	if (isClawParked()) {
+		// Short circuit if the claw is parked.
+		return true;
+	}
+
 	unsigned long startMillis = millis();
-	unsigned long currentMillis = 0;
-	while (!isULimitTriggered()) {
-		readLimitSwitches();
-		if (!isULimitTriggered()) {
+	unsigned long currentMillis = startMillis;
+
+	while (!isClawParked() && currentMillis - startMillis < 2000) {
+		currentMillis = millis();
+
+		if (!isClawParked()) {
 			moveUD(1);
 		} else {
 			moveUD(0);
 		}
 
-		currentMillis = millis();
-		if (!isULimitTriggered() && currentMillis - startMillis >= 2000) {
-			// Error state, took too long.
-			// Don't break, return.  We don't want to attempt parking the gantry.
-			return false;
+		if (isClawParked()) {
+			moveUD(0);
+			return true;
 		}
 	}
-	clawParked = true;
-	return true;
+
+	moveUD(0);
+	// Error state, took too long.
+	return false;
 }
 
 bool parkGantry() {
+	if (isGantryParked()) {
+		// Short circuit if the gantry is parked.
+		return true;
+	}
+
 	unsigned long startMillis = millis();
 	unsigned long currentMillis = startMillis;
 
 	currentGantryMove.fb = G_FORWARD;
 	currentGantryMove.lr = G_LEFT;
 
-	while ((!isFLimitTriggered() || !isLLimitTriggered()) && currentMillis - startMillis < 4000) {
+	while (!isGantryParked() && currentMillis - startMillis < 4000) {
 		currentMillis = millis();
 		updateGantryMove();
-		if (isFLimitTriggered() && isLLimitTriggered()) {
-			gantryParked = true;
+		if (isGantryParked()) {
+			currentGantryMove.fb = G_STOP;
+			currentGantryMove.lr = G_STOP;
 			return true;
 		}
 	}
@@ -251,7 +297,6 @@ void moveFB(int dir) {
 	switch (dir) {
 		case 1: // Forward
 			if (!isFLimitTriggered()) {
-				gantryParked = false;
 				MT_FB.run(BACKWARD); // I'm not swapping the wires.  *Angry elf noises.*
 			} else {
 				currentGantryMove.fb = 0;
@@ -260,7 +305,6 @@ void moveFB(int dir) {
 			break;
 		case -1: // Backward
 			if (!isBLimitTriggered()) {
-				gantryParked = false;
 				MT_FB.run(FORWARD);
 			} else {
 				currentGantryMove.fb = 0;
@@ -282,12 +326,10 @@ void moveLR(int dir) {
 	switch (dir) {
 		case 1: // Right
 			// No limit switch installed.
-			gantryParked = false;
 			MT_LR.run(BACKWARD);
 			break;
 		case -1: // Left
 			if (!isLLimitTriggered()) {
-				gantryParked = false;
 				MT_LR.run(FORWARD);
 			} else {
 				currentGantryMove.lr = 0;
@@ -309,7 +351,6 @@ void moveUD(int dir) {
 	switch (dir) {
 		case 1: // Up
 			if (!isULimitTriggered()) {
-				clawParked = false;
 				MT_UD.run(BACKWARD);
 			} else {
 				MT_UD.run(RELEASE);
@@ -317,7 +358,6 @@ void moveUD(int dir) {
 			break;
 		case -1: // Down
 			if (!isDLimitTriggered()) {
-				clawParked = false;
 				MT_UD.run(FORWARD);
 			} else {
 				MT_UD.run(RELEASE);
