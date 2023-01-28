@@ -32,3 +32,4 @@
 
 // Lights
 #define LED_ERROR_PIN LED_BUILTIN
+#define LED_DROP_BUTTON_PIN 23

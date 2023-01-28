@@ -28,6 +28,9 @@ void initSwitches() {
 void initLights() {
 	pinMode(LED_ERROR_PIN, OUTPUT);
 	digitalWrite(LED_ERROR_PIN, LOW);
+
+	pinMode(LED_DROP_BUTTON_PIN, OUTPUT);
+	digitalWrite(LED_DROP_BUTTON_PIN, LOW);
 }
 
 void loop() {
