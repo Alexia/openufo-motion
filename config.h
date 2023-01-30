@@ -13,7 +13,12 @@
 // 153(60%) is the recommended minimum for 24V motors.
 #define MINIMUM_SPEED 153
 
+#define CLAW_PWM_PIN 3
 #define DEFAULT_STRENGTH_CLAW 255 // 0-255
+// 40: Low win rate(if at all) for 50mm gacha capsules.  They fall out of the claw near the top.
+// 45: 95% win rate for 50mm gacha capsules.
+// 55: 100% win rate for 50mm gacha capsules.  Chibi plushie falls out.
+// 127-255: The claw becomes a monster and can pick up anything.
 
 // Player Input
 #define SW_DIR_F_PIN 48

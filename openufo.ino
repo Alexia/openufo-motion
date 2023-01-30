@@ -3,6 +3,7 @@
 void setup() {
 	initSwitches();
 	initLights();
+	initClaw();
 
 	startCom();
 	setParkingSpeed();
@@ -31,6 +32,11 @@ void initLights() {
 
 	pinMode(LED_DROP_BUTTON_PIN, OUTPUT);
 	digitalWrite(LED_DROP_BUTTON_PIN, LOW);
+}
+
+void initClaw() {
+	pinMode(CLAW_PWM_PIN, OUTPUT);
+	analogWrite(CLAW_PWM_PIN, 0);
 }
 
 void updateLEDLastMillis() {
@@ -109,7 +115,7 @@ void loop() {
 			if (PLAYER_D) {
 				currentGantryMove.fb = G_STOP;
 				currentGantryMove.lr = G_STOP;
-				currentState = STATE_GRABBING;
+				currentState = STATE_GRAB;
 			}
 
 			if (PLAYER_F) {
@@ -127,7 +133,7 @@ void loop() {
 				currentGantryMove.lr = G_STOP;
 			}
 			break;
-		case STATE_GRABBING:
+		case STATE_GRAB:
 			// Player loses all control.
 			// Drop button LED is off.
 			if (dropButtonLEDState != 0) {
@@ -137,7 +143,15 @@ void loop() {
 
 			doGrab();
 
-			currentState = STATE_PRIZE_DETECT;
+			currentState = STATE_GRAB_PARK;
+			break;
+		case STATE_GRAB_PARK:
+			if (parkAll()) {
+				currentState = STATE_PRIZE_DETECT;
+			} else {
+				currentState = STATE_ERROR;
+			}
+			moveClaw(0);
 			break;
 		case STATE_PRIZE_DETECT:
 			// while (prize not detected) ->
@@ -193,7 +207,6 @@ void setDefaultSpeed() {
 	MT_UD.setSpeed(DEFAULT_SPEED_UD);
 	MT_FB.setSpeed(DEFAULT_SPEED_FB);
 	MT_LR.setSpeed(DEFAULT_SPEED_LR);
-	CLAW.setSpeed(DEFAULT_STRENGTH_CLAW);
 }
 
 // Sets a parking speed for all motors.
@@ -201,7 +214,6 @@ void setParkingSpeed() {
 	MT_UD.setSpeed(PARKING_SPEED);
 	MT_FB.setSpeed(PARKING_SPEED);
 	MT_LR.setSpeed(PARKING_SPEED);
-	CLAW.setSpeed(DEFAULT_STRENGTH_CLAW);
 }
 
 bool isAllParked() {
@@ -240,22 +252,26 @@ bool parkClaw() {
 	unsigned long startMillis = millis();
 	unsigned long currentMillis = startMillis;
 
-	while (!isClawParked() && currentMillis - startMillis < 4000) {
+	while (!isClawParked() && currentMillis - startMillis < 6000) {
 		currentMillis = millis();
 
 		if (!isClawParked()) {
 			moveUD(1);
-		} else {
-			moveUD(0);
 		}
 
 		if (isClawParked()) {
-			moveUD(0);
-			return true;
+			break;
 		}
 	}
 
 	moveUD(0);
+	delay(500); // Shitty debounce.
+
+	if (isClawParked()) {
+		return true;
+	}
+
+	Serial.println("Claw parking failed.");
 	// Error state, took too long.
 	return false;
 }
@@ -276,16 +292,24 @@ bool parkGantry() {
 		currentMillis = millis();
 		updateGantryMove();
 		if (isGantryParked()) {
-			currentGantryMove.fb = G_STOP;
-			currentGantryMove.lr = G_STOP;
-			return true;
+			break;
 		}
+	}
+
+	currentGantryMove.fb = G_STOP;
+	currentGantryMove.lr = G_STOP;
+	updateGantryMove();
+	delay(500); // Also shitty debounce here.
+
+	if (isGantryParked()) {
+		return true;
 	}
 
 	emergencyStop();
 	currentGantryMove.fb = G_STOP;
 	currentGantryMove.lr = G_STOP;
 
+	Serial.println("Gantry parking failed.");
 	// Error state, took too long.
 	return false;
 }
@@ -412,8 +436,6 @@ void doGrab() {
 
 		if (!isDLimitTriggered()) {
 			moveUD(-1);
-		} else {
-			moveUD(0);
 		}
 
 		if (isDLimitTriggered()) {
@@ -423,21 +445,18 @@ void doGrab() {
 
 	moveUD(0);
 	moveClaw(1);
-	parkAll();
-	moveClaw(0);
 }
 
 // 1 = Close
 // 0 = Open
 void moveClaw(int state) {
-	// Forward and backward closes the claw, but forward(in this wiring configuration) has the best holding force.
 	switch (state) {
 		case 1: // Close
-			CLAW.run(FORWARD);
+			analogWrite(CLAW_PWM_PIN, DEFAULT_STRENGTH_CLAW);
 			break;
 		case 0: // Stop
 		default:
-			CLAW.run(RELEASE);
+			analogWrite(CLAW_PWM_PIN, 0);
 			break;
 	}
 }
