@@ -2,17 +2,22 @@
 #include <AFMotor.h>
 #include <SerialTransfer.h>
 
-int LIMIT_F = 0;
-int LIMIT_B = 0;
-int LIMIT_U = 0;
-int LIMIT_D = 0;
-int LIMIT_L = 0;
+bool LIMIT_F = false;
+bool LIMIT_B = false;
+bool LIMIT_U = false;
+bool LIMIT_D = false;
+bool LIMIT_L = false;
 
-int PLAYER_F = 0;
-int PLAYER_B = 0;
-int PLAYER_L = 0;
-int PLAYER_R = 0;
-int PLAYER_D = 0;
+bool PLAYER_F = false;
+bool PLAYER_B = false;
+bool PLAYER_L = false;
+bool PLAYER_R = false;
+bool PLAYER_D = false;
+
+bool SW_TOKEN_CREDIT_PRESSED = false;
+bool SW_SERVICE_CREDIT_PRESSED = false;
+bool SW_PROGRAM_PRESSED = false;
+bool SW_TILT_PRESSED = false;
 
 AF_DCMotor MT_UD(1, MOTOR12_64KHZ);
 // AF_DCMotor CLAW(2, MOTOR12_64KHZ);
@@ -21,8 +26,8 @@ AF_DCMotor MT_LR(4, MOTOR34_64KHZ);
 
 SerialTransfer com;
 
-#define NUM_SW 13
-const uint8_t SW_PINS[NUM_SW] = {SW_LIMIT_F_PIN, SW_LIMIT_B_PIN, SW_LIMIT_U_PIN, SW_LIMIT_D_PIN, SW_LIMIT_L_PIN, SW_DIR_F_PIN, SW_DIR_B_PIN, SW_DIR_L_PIN, SW_DIR_R_PIN, SW_DIR_D_PIN, SW_TOKEN_CREDIT_PIN, SW_SERVICE_CREDIT_PIN, SW_PROGRAM_PIN};
+#define NUM_SW 14
+const uint8_t SW_PINS[NUM_SW] = {SW_LIMIT_F_PIN, SW_LIMIT_B_PIN, SW_LIMIT_U_PIN, SW_LIMIT_D_PIN, SW_LIMIT_L_PIN, SW_DIR_F_PIN, SW_DIR_B_PIN, SW_DIR_L_PIN, SW_DIR_R_PIN, SW_DIR_D_PIN, SW_TOKEN_CREDIT_PIN, SW_SERVICE_CREDIT_PIN, SW_PROGRAM_PIN, SW_TILT_PIN};
 
 #define STATE_PROGRAM -3
 #define STATE_ERROR -2

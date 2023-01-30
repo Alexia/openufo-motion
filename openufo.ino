@@ -85,8 +85,8 @@ void loop() {
 			// Input does nothing.
 			// Adding credit triggers transition to STATE_PARKED_CREDITS.
 
-			if (!digitalRead(SW_TOKEN_CREDIT_PIN)) {
-				parkAll();
+			if (SW_TOKEN_CREDIT_PRESSED || SW_SERVICE_CREDIT_PRESSED) {
+				parkAll(); // This was originally placed here to get around the motor controller crapping out.  This can still help with failure conditions though.
 				currentState = STATE_PARKED_CREDITS;
 			}
 			break;
@@ -172,6 +172,7 @@ void startCom() {
 void updateSwitches() {
 	readPlayerSwitches();
 	readLimitSwitches();
+	readInternalSwitches();
 }
 
 void readPlayerSwitches() {
@@ -183,11 +184,38 @@ void readPlayerSwitches() {
 }
 
 void readLimitSwitches() {
-	LIMIT_F = digitalRead(SW_LIMIT_F_PIN);
-	LIMIT_B = digitalRead(SW_LIMIT_B_PIN);
-	LIMIT_U = digitalRead(SW_LIMIT_U_PIN);
-	LIMIT_D = digitalRead(SW_LIMIT_D_PIN);
-	LIMIT_L = digitalRead(SW_LIMIT_L_PIN);
+	LIMIT_F = !digitalRead(SW_LIMIT_F_PIN);
+	LIMIT_B = !digitalRead(SW_LIMIT_B_PIN);
+	LIMIT_U = !digitalRead(SW_LIMIT_U_PIN);
+	LIMIT_D = !digitalRead(SW_LIMIT_D_PIN);
+	LIMIT_L = !digitalRead(SW_LIMIT_L_PIN);
+}
+
+void readInternalSwitches() {
+	SW_TOKEN_CREDIT_PRESSED = !digitalRead(SW_SERVICE_CREDIT_PIN);
+	SW_SERVICE_CREDIT_PRESSED = !digitalRead(SW_SERVICE_CREDIT_PIN);
+	SW_PROGRAM_PRESSED = !digitalRead(SW_PROGRAM_PIN);
+	SW_TILT_PRESSED = !digitalRead(SW_TILT_PIN);
+}
+
+bool isFLimitTriggered() {
+	return LIMIT_F;
+}
+
+bool isBLimitTriggered() {
+	return LIMIT_B;
+}
+
+bool isLLimitTriggered() {
+	return LIMIT_L;
+}
+
+bool isULimitTriggered() {
+	return LIMIT_U;
+}
+
+bool isDLimitTriggered() {
+	return LIMIT_D;
 }
 
 // CLACK!  Releases tension on the claw string and does a claw check.
@@ -312,26 +340,6 @@ bool parkGantry() {
 	Serial.println("Gantry parking failed.");
 	// Error state, took too long.
 	return false;
-}
-
-bool isFLimitTriggered() {
-	return LIMIT_F == 0;
-}
-
-bool isBLimitTriggered() {
-	return LIMIT_B == 0;
-}
-
-bool isLLimitTriggered() {
-	return LIMIT_L == 0;
-}
-
-bool isULimitTriggered() {
-	return LIMIT_U == 0;
-}
-
-bool isDLimitTriggered() {
-	return LIMIT_D == 0;
 }
 
 void updateGantryMove() {
