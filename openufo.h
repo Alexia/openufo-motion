@@ -74,3 +74,15 @@ unsigned long flashLEDLastMillis = 0;
 unsigned long flashLEDCurrentState = LOW;
 
 unsigned long prizeDetectStartMillis = 0;
+
+// Credit Handling
+int totalCredits = 0;					   // Signed so I can detect if the code goofed and went below 0.
+unsigned long creditDetectStartMillis = 0; // The coin comparitor sends out a 25/50/100ms pulse so we have to time to prevent detecting a long pulse as multiple credits.
+byte creditDetectPulseMs = 55;			   // Set this to match the coin comparitor pulse.
+
+// Play time out.
+//  0 - Infinite
+//  x - Milliseconds
+#define DEFAULT_PLAY_TIME_LIMIT 60000
+unsigned long playTimeLimit = DEFAULT_PLAY_TIME_LIMIT;
+unsigned long playStartMillis = 0;

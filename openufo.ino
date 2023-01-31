@@ -46,15 +46,34 @@ void updateLEDLastMillis() {
 	}
 }
 
+void updateCredits() {
+	if (totalCredits < 0) {
+		totalCredits = 0;
+	}
+
+	if ((SW_TOKEN_CREDIT_PRESSED || SW_SERVICE_CREDIT_PRESSED) && creditDetectStartMillis == 0) {
+		totalCredits++;
+		Serial.println(totalCredits);
+	}
+
+	if (creditDetectStartMillis == 0) {
+		creditDetectStartMillis = millis();
+	}
+	if (millis() - creditDetectStartMillis >= creditDetectPulseMs) {
+		creditDetectStartMillis = 0;
+	}
+}
+
 void loop() {
 	updateSwitches();
 	updateGantryMove(); // MUST HAPPEN OUTSIDE OF THE STATES!  Otherwise moves or stops may never occur.
 	updateLEDLastMillis();
 
+	updateCredits(); // Must happen after updateSwitches();
+
 	// TOOD:
-	// Credit Handling
 	// Serial Communication
-	// Prize Detection
+	// Settings/EEPROM
 
 	// States:
 	// Boot
@@ -90,8 +109,8 @@ void loop() {
 			// Input does nothing.
 			// Adding credit triggers transition to STATE_PARKED_CREDITS.
 
-			if (SW_TOKEN_CREDIT_PRESSED || SW_SERVICE_CREDIT_PRESSED) {
-				parkAll(); // This was originally placed here to get around the motor controller crapping out.  This can still help with failure conditions though.
+			if (totalCredits > 0) {
+				parkAll(); // This was originally placed here to get around the L293D motor controller crapping out.  This can still help with failure conditions though.
 				currentState = STATE_PARKED_CREDITS;
 			}
 			break;
@@ -105,6 +124,9 @@ void loop() {
 
 			// Input allowed from joystick only; triggers transition to STATE_PLAYER_CONTROL.
 			if (PLAYER_F || PLAYER_B || PLAYER_L || PLAYER_R) {
+				totalCredits--;
+				Serial.println(totalCredits);
+				playStartMillis = millis();
 				currentState = STATE_PLAYER_CONTROL;
 			}
 			break;
@@ -117,7 +139,8 @@ void loop() {
 			}
 
 			// Drop button input triggers transition to STATE_GRABBING.
-			if (PLAYER_D) {
+			if (PLAYER_D || millis() - playStartMillis >= playTimeLimit) {
+				playStartMillis = 0;
 				currentGantryMove.fb = G_STOP;
 				currentGantryMove.lr = G_STOP;
 				currentState = STATE_GRAB;
