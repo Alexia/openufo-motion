@@ -78,7 +78,8 @@ unsigned long prizeDetectStartMillis = 0;
 // Credit Handling
 int totalCredits = 0;					   // Signed so I can detect if the code goofed and went below 0.
 unsigned long creditDetectStartMillis = 0; // The coin comparitor sends out a 25/50/100ms pulse so we have to time to prevent detecting a long pulse as multiple credits.
-byte creditDetectPulseMs = 55;			   // Set this to match the coin comparitor pulse.
+byte creditDetectPulseMs = 100;			   // Set this to match the coin comparitor pulse.
+bool creditSwitchPressed = false;
 
 // Play time out.
 //  0 - Infinite

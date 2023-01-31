@@ -64,16 +64,21 @@ void updateCredits() {
 	}
 }
 
-void loop() {
+void doUpdates() {
 	updateSwitches();
 	updateGantryMove(); // MUST HAPPEN OUTSIDE OF THE STATES!  Otherwise moves or stops may never occur.
 	updateLEDLastMillis();
 
 	updateCredits(); // Must happen after updateSwitches();
+}
+
+void loop() {
+	doUpdates();
 
 	// TOOD:
 	// Serial Communication
 	// Settings/EEPROM
+	// Fix/rework parking to not block the main loop.  This causes stuff like credit detection to fail.
 
 	// States:
 	// Boot
@@ -93,9 +98,9 @@ void loop() {
 			// This is intended for safety to prevent damage to the machine and operator.
 			while (1) {
 				digitalWrite(LED_ERROR_PIN, HIGH);
-				delay(500);
+				delayWithUpdates(500);
 				digitalWrite(LED_ERROR_PIN, LOW);
-				delay(500);
+				delayWithUpdates(500);
 			}
 			break;
 		case STATE_PARKED_ATTRACT:
@@ -299,6 +304,13 @@ bool isGantryParked() {
 	return isFLimitTriggered() && isLLimitTriggered();
 }
 
+void delayWithUpdates(unsigned long milliseconds) {
+	unsigned long startMillis = millis();
+	while (millis() - startMillis < milliseconds) {
+		doUpdates();
+	}
+}
+
 bool parkAll() {
 	readLimitSwitches();
 
@@ -323,6 +335,7 @@ bool parkClaw() {
 
 	while (!isClawParked() && currentMillis - startMillis < 6000) {
 		currentMillis = millis();
+		doUpdates(); // If we are blocking the main loop we have to call doUpdates().
 
 		if (!isClawParked()) {
 			moveUD(1);
@@ -334,7 +347,7 @@ bool parkClaw() {
 	}
 
 	moveUD(0);
-	delay(500); // Shitty debounce.
+	delayWithUpdates(250); // Shitty debounce.
 
 	if (isClawParked()) {
 		return true;
@@ -359,7 +372,8 @@ bool parkGantry() {
 
 	while (!isGantryParked() && currentMillis - startMillis < 4000) {
 		currentMillis = millis();
-		updateGantryMove();
+		doUpdates(); // If we are blocking the main loop we have to call doUpdates().
+
 		if (isGantryParked()) {
 			break;
 		}
@@ -368,7 +382,7 @@ bool parkGantry() {
 	currentGantryMove.fb = G_STOP;
 	currentGantryMove.lr = G_STOP;
 	updateGantryMove();
-	delay(500); // Also shitty debounce here.
+	delayWithUpdates(250); // Also shitty debounce here.
 
 	if (isGantryParked()) {
 		return true;
@@ -482,6 +496,7 @@ void doGrab() {
 
 	while (!isDLimitTriggered() && currentMillis - startMillis < 2000) {
 		currentMillis = millis();
+		doUpdates(); // If we are blocking the main loop we have to call doUpdates().
 
 		if (!isDLimitTriggered()) {
 			moveUD(-1);
