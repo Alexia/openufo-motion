@@ -93,6 +93,7 @@ void loop() {
 		case STATE_PROGRAM:
 			// Programming mode blocks all other states until it exits.
 		case STATE_BOOT:
+			// This state should never be reached after a normal boot so just fall through to STATE_ERROR.
 		case STATE_ERROR:
 			// If we are in an error state or failed boot prevent all operations until powered off.
 			// This is intended for safety to prevent damage to the machine and operator.
