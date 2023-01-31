@@ -51,6 +51,11 @@ void loop() {
 	updateGantryMove(); // MUST HAPPEN OUTSIDE OF THE STATES!  Otherwise moves or stops may never occur.
 	updateLEDLastMillis();
 
+	// TOOD:
+	// Credit Handling
+	// Serial Communication
+	// Prize Detection
+
 	// States:
 	// Boot
 	// (Loop ->)
@@ -154,10 +159,22 @@ void loop() {
 			moveClaw(0);
 			break;
 		case STATE_PRIZE_DETECT:
-			// while (prize not detected) ->
-			// if (prize detected) -> CELEBRATE! -> Transition to STATE_PARKED_ATTRACT
-			// if (timeout reached) -> Aww :( -> Transition to STATE_PARKED_ATTRACT
-			currentState = STATE_PARKED_ATTRACT;
+			if (prizeDetectStartMillis == 0) {
+				prizeDetectStartMillis = millis();
+			}
+			if (SW_PRIZE_DETECTED) {
+				prizeDetectStartMillis = 0;
+				currentState = STATE_PARKED_ATTRACT;
+				// Send serial event of prize detected.
+				Serial.println("PRIZE!");
+			} else {
+				if (millis() - prizeDetectStartMillis >= 2000) {
+					prizeDetectStartMillis = 0;
+					currentState = STATE_PARKED_ATTRACT;
+					// Send serial event of prize undetected.
+					Serial.println(":(");
+				}
+			}
 			break;
 		default:
 			break;
@@ -192,10 +209,11 @@ void readLimitSwitches() {
 }
 
 void readInternalSwitches() {
-	SW_TOKEN_CREDIT_PRESSED = !digitalRead(SW_SERVICE_CREDIT_PIN);
+	SW_TOKEN_CREDIT_PRESSED = !digitalRead(SW_TOKEN_CREDIT_PIN);
 	SW_SERVICE_CREDIT_PRESSED = !digitalRead(SW_SERVICE_CREDIT_PIN);
 	SW_PROGRAM_PRESSED = !digitalRead(SW_PROGRAM_PIN);
 	SW_TILT_PRESSED = !digitalRead(SW_TILT_PIN);
+	SW_PRIZE_DETECTED = digitalRead(SW_PRIZE_DETECT_PIN);
 }
 
 bool isFLimitTriggered() {

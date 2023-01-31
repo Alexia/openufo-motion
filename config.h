@@ -41,3 +41,6 @@
 
 // Tilt Switch
 #define SW_TILT_PIN PIN_A5
+
+// Prize Detect
+#define SW_PRIZE_DETECT_PIN 39
