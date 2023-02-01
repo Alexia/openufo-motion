@@ -12,9 +12,9 @@ void setup() {
 	clack();
 
 	if (parkAll()) {
-		currentState = STATE_PARKED_ATTRACT;
+		changeState(STATE_PARKED_ATTRACT);
 	} else {
-		currentState = STATE_ERROR;
+		changeState(STATE_ERROR);
 	}
 	setDefaultSpeed();
 }
@@ -53,7 +53,7 @@ void updateCredits() {
 
 	if ((SW_TOKEN_CREDIT_PRESSED || SW_SERVICE_CREDIT_PRESSED) && creditDetectStartMillis == 0) {
 		totalCredits++;
-		Serial.println(totalCredits);
+		sendCom("cred", (String)totalCredits);
 	}
 
 	if (creditDetectStartMillis == 0) {
@@ -117,7 +117,7 @@ void loop() {
 
 			if (totalCredits > 0) {
 				parkAll(); // This was originally placed here to get around the L293D motor controller crapping out.  This can still help with failure conditions though.
-				currentState = STATE_PARKED_CREDITS;
+				changeState(STATE_PARKED_CREDITS);
 			}
 			break;
 		case STATE_PARKED_CREDITS:
@@ -129,11 +129,12 @@ void loop() {
 			}
 
 			// Input allowed from joystick only; triggers transition to STATE_PLAYER_CONTROL.
+			// TODO: This should only transition when moving away from the parked position.  Some machines start from the right.
 			if (PLAYER_F || PLAYER_B || PLAYER_L || PLAYER_R) {
 				totalCredits--;
-				Serial.println(totalCredits);
+				sendCom("cred", (String)totalCredits);
 				playStartMillis = millis();
-				currentState = STATE_PLAYER_CONTROL;
+				changeState(STATE_PLAYER_CONTROL);
 			}
 			break;
 		case STATE_PLAYER_CONTROL:
@@ -149,7 +150,7 @@ void loop() {
 				playStartMillis = 0;
 				currentGantryMove.fb = G_STOP;
 				currentGantryMove.lr = G_STOP;
-				currentState = STATE_GRAB;
+				changeState(STATE_GRAB);
 			}
 
 			if (PLAYER_F) {
@@ -177,13 +178,13 @@ void loop() {
 
 			doGrab();
 
-			currentState = STATE_GRAB_PARK;
+			changeState(STATE_GRAB_PARK);
 			break;
 		case STATE_GRAB_PARK:
 			if (parkAll()) {
-				currentState = STATE_PRIZE_DETECT;
+				changeState(STATE_PRIZE_DETECT);
 			} else {
-				currentState = STATE_ERROR;
+				changeState(STATE_ERROR);
 			}
 			moveClaw(0);
 			break;
@@ -191,23 +192,32 @@ void loop() {
 			if (prizeDetectStartMillis == 0) {
 				prizeDetectStartMillis = millis();
 			}
-			if (SW_PRIZE_DETECTED) {
+			if (isPrizeDetected()) {
 				prizeDetectStartMillis = 0;
-				currentState = STATE_PARKED_ATTRACT;
+				changeState(STATE_PARKED_ATTRACT);
 				// Send serial event of prize detected.
-				Serial.println("PRIZE!");
+				sendCom("prde", "1");
 			} else {
 				if (millis() - prizeDetectStartMillis >= 2000) {
 					prizeDetectStartMillis = 0;
-					currentState = STATE_PARKED_ATTRACT;
+					changeState(STATE_PARKED_ATTRACT);
 					// Send serial event of prize undetected.
-					Serial.println(":(");
+					sendCom("prde", "0");
 				}
 			}
 			break;
 		default:
 			break;
 	}
+}
+
+void changeState(int state) {
+	currentState = state;
+	sendCom("stat", (String)state);
+}
+
+void sendCom(String word, String data) {
+	Serial.println(word + ":" + data);
 }
 
 void startCom() {
@@ -227,6 +237,21 @@ void readPlayerSwitches() {
 	PLAYER_L = !digitalRead(SW_DIR_L_PIN);
 	PLAYER_R = !digitalRead(SW_DIR_R_PIN);
 	PLAYER_D = !digitalRead(SW_DIR_D_PIN);
+
+	byte newState = 0b00000000;
+	bitWrite(newState, 7, PLAYER_F);
+	bitWrite(newState, 6, PLAYER_B);
+	bitWrite(newState, 5, PLAYER_L);
+	bitWrite(newState, 4, PLAYER_R); // Reserved
+	bitWrite(newState, 3, 0);		 // Reserved
+	bitWrite(newState, 2, PLAYER_D);
+	bitWrite(newState, 1, 0); // Reserved
+	bitWrite(newState, 0, 0); // Reserved
+
+	if (newState != playerSwitchState) {
+		playerSwitchState = newState;
+		sendCom("plsw", (String)playerSwitchState);
+	}
 }
 
 void readLimitSwitches() {
@@ -235,6 +260,21 @@ void readLimitSwitches() {
 	LIMIT_U = !digitalRead(SW_LIMIT_U_PIN);
 	LIMIT_D = !digitalRead(SW_LIMIT_D_PIN);
 	LIMIT_L = !digitalRead(SW_LIMIT_L_PIN);
+
+	byte newState = 0b00000000;
+	bitWrite(newState, 7, LIMIT_F);
+	bitWrite(newState, 6, LIMIT_B);
+	bitWrite(newState, 5, LIMIT_L);
+	bitWrite(newState, 4, 0); // Reserved - LIMIT_R
+	bitWrite(newState, 3, LIMIT_U);
+	bitWrite(newState, 2, LIMIT_D);
+	bitWrite(newState, 1, 0); // Reserved - Claw Open
+	bitWrite(newState, 0, 0); // Reserved - Claw Close
+
+	if (newState != limitSwitchState) {
+		limitSwitchState = newState;
+		sendCom("lisw", (String)limitSwitchState);
+	}
 }
 
 void readInternalSwitches() {
@@ -243,6 +283,21 @@ void readInternalSwitches() {
 	SW_PROGRAM_PRESSED = !digitalRead(SW_PROGRAM_PIN);
 	SW_TILT_PRESSED = !digitalRead(SW_TILT_PIN);
 	SW_PRIZE_DETECTED = digitalRead(SW_PRIZE_DETECT_PIN);
+
+	byte newState = 0b00000000;
+	bitWrite(newState, 7, SW_TOKEN_CREDIT_PRESSED);
+	bitWrite(newState, 6, SW_SERVICE_CREDIT_PRESSED);
+	bitWrite(newState, 5, SW_PROGRAM_PRESSED);
+	bitWrite(newState, 4, SW_TILT_PRESSED);
+	bitWrite(newState, 3, SW_PRIZE_DETECTED);
+	bitWrite(newState, 2, 0); // Reserved
+	bitWrite(newState, 1, 0); // Reserved
+	bitWrite(newState, 0, 0); // Reserved
+
+	if (newState != internalSwitchState) {
+		internalSwitchState = newState;
+		sendCom("insw", (String)internalSwitchState);
+	}
 }
 
 bool isFLimitTriggered() {
@@ -263,6 +318,10 @@ bool isULimitTriggered() {
 
 bool isDLimitTriggered() {
 	return LIMIT_D;
+}
+
+bool isPrizeDetected() {
+	return SW_PRIZE_DETECTED;
 }
 
 // CLACK!  Releases tension on the claw string and does a claw check.
@@ -331,6 +390,8 @@ bool parkClaw() {
 		return true;
 	}
 
+	sendCom("clpa", "");
+
 	unsigned long startMillis = millis();
 	unsigned long currentMillis = startMillis;
 
@@ -364,6 +425,8 @@ bool parkGantry() {
 		// Short circuit if the gantry is parked.
 		return true;
 	}
+
+	sendCom("gapa", "");
 
 	unsigned long startMillis = millis();
 	unsigned long currentMillis = startMillis;

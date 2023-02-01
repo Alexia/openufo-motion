@@ -22,18 +22,20 @@ Example, STATE_PARKED_CREDITS:
 
 ### Current Movement Information (byte, sent as integer)
 
+(TODO: Implement)
+
 Byte position is left to right. For the directions 1 indicates movement is traveling in that direction. For the claw 1 indicates the claw is closed.
 
 | Pos | Data       |
 | --- | ---------- |
-| 0   | Forward    |
-| 1   | Backward   |
-| 2   | Left       |
-| 3   | Right      |
-| 4   | Up         |
-| 5   | Down       |
-| 6   | Claw       |
-| 7   | (Reserved) |
+| 7   | Forward    |
+| 6   | Backward   |
+| 5   | Left       |
+| 4   | Right      |
+| 3   | Up         |
+| 2   | Down       |
+| 1   | Claw       |
+| 0   | (Reserved) |
 
 Example, moving backward and right:
 
@@ -41,18 +43,18 @@ Example, moving backward and right:
 
 ### Limit Switch Information (byte, sent as integer)
 
-Byte position is left to right. 1 indicates the switch is engaged.
+Byte position is leftmost to rightmost. 1 indicates the switch is engaged.
 
-| Pos | Data        |
-| --- | ----------- |
-| 0   | Forward     |
-| 1   | Backward    |
-| 2   | Left        |
-| 3   | Right       |
-| 4   | Up          |
-| 5   | Down        |
-| 6   | Claw Open   |
-| 7   | Claw Closed |
+| Pos | Data       |
+| --- | ---------- |
+| 7   | Forward    |
+| 6   | Backward   |
+| 5   | Left       |
+| 4   | Right      |
+| 3   | Up         |
+| 2   | Down       |
+| 1   | Claw Open  |
+| 0   | Claw Close |
 
 Example, limit switches backward and right engaged:
 
@@ -60,18 +62,18 @@ Example, limit switches backward and right engaged:
 
 ### Player Switch Information (byte, sent as integer)
 
-Byte position is left to right. 1 indicates the switch is engaged.
+Byte position is leftmost to rightmost. 1 indicates the switch is engaged.
 
 | Pos | Data       |
 | --- | ---------- |
-| 0   | Forward    |
-| 1   | Backward   |
-| 2   | Left       |
-| 3   | Right      |
-| 4   | (Reserved) |
-| 5   | Down       |
-| 6   | (Reserved) |
-| 7   | (Reserved) |
+| 7   | Forward    |
+| 6   | Backward   |
+| 5   | Left       |
+| 4   | Right      |
+| 3   | (Reserved) |
+| 2   | Down       |
+| 1   | (Reserved) |
+| 0   | (Reserved) |
 
 Example, limit switches backward and right engaged:
 
@@ -79,18 +81,18 @@ Example, limit switches backward and right engaged:
 
 ### Internal Switch Information (byte, sent as integer)
 
-Byte position is left to right. 1 indicates the switch is engaged.
+Byte position is leftmost to rightmost. 1 indicates the switch is engaged.
 
 | Pos | Data           |
 | --- | -------------- |
-| 0   | Token Credit   |
-| 1   | Service Credit |
-| 2   | Program        |
-| 3   | Tilt           |
-| 4   | Prize Detect   |
-| 5   | (Reserved)     |
-| 6   | (Reserved)     |
-| 7   | (Reserved)     |
+| 7   | Token Credit   |
+| 6   | Service Credit |
+| 5   | Program        |
+| 4   | Tilt           |
+| 3   | Prize Detect   |
+| 2   | (Reserved)     |
+| 1   | (Reserved)     |
+| 0   | (Reserved)     |
 
 Example, limit switches backward and right engaged:
 
@@ -103,5 +105,29 @@ Prize detection after parking and opening the claw.
 Example, prize detected:
 
     prde:1
+
+### Gantry Park Started (null)
+
+Indicates that the machine is doing an automated gantry park.
+
+Example, gantry parking:
+
+    gapa:
+
+### Claw Park Started (null)
+
+Indicates that the machine is doing an automated claw park.
+
+Example, claw parking:
+
+    clpa:
+
+### Credit Update (integer)
+
+Sent when the total credits changes.
+
+Example, five credits:
+
+    cred:5
 
 ## Receive

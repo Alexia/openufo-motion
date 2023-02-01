@@ -8,6 +8,7 @@ bool LIMIT_B = false;
 bool LIMIT_U = false;
 bool LIMIT_D = false;
 bool LIMIT_L = false;
+byte limitSwitchState = 0b00000000;
 
 // Player Joystick Status
 bool PLAYER_F = false;
@@ -15,6 +16,7 @@ bool PLAYER_B = false;
 bool PLAYER_L = false;
 bool PLAYER_R = false;
 bool PLAYER_D = false;
+byte playerSwitchState = 0b00000000;
 
 // Interal Switch Status
 bool SW_TOKEN_CREDIT_PRESSED = false;
@@ -22,6 +24,7 @@ bool SW_SERVICE_CREDIT_PRESSED = false;
 bool SW_PROGRAM_PRESSED = false;
 bool SW_TILT_PRESSED = false;
 bool SW_PRIZE_DETECTED = false;
+byte internalSwitchState = 0b00000000;
 
 // Motor Setup
 AF_DCMotor MT_UD(1, MOTOR12_64KHZ);
