@@ -65,6 +65,7 @@ struct gantryMove {
 };
 
 gantryMove currentGantryMove = {G_STOP, G_STOP};
+byte lastGantryMove = 0b00000000;
 
 // Drop button LED state and millisecond tracker for all LEDs.
 //  0 - Off

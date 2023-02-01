@@ -75,10 +75,10 @@ void doUpdates() {
 void loop() {
 	doUpdates();
 
-	// TOOD:
-	// Serial Communication
-	// Settings/EEPROM
-	// Fix/rework parking to not block the main loop.  This causes stuff like credit detection to fail.
+	// TODO:
+	//  Serial Communication
+	//  Settings/EEPROM
+	//  Fix/rework parking to not block the main loop.  This causes stuff like credit detection to fail.
 
 	// States:
 	// Boot
@@ -145,14 +145,6 @@ void loop() {
 				dropButtonLEDState = 2;
 			}
 
-			// Drop button input triggers transition to STATE_GRABBING.
-			if (PLAYER_D || millis() - playStartMillis >= playTimeLimit) {
-				playStartMillis = 0;
-				currentGantryMove.fb = G_STOP;
-				currentGantryMove.lr = G_STOP;
-				changeState(STATE_GRAB);
-			}
-
 			if (PLAYER_F) {
 				currentGantryMove.fb = G_FORWARD;
 			} else if (PLAYER_B) {
@@ -166,6 +158,14 @@ void loop() {
 				currentGantryMove.lr = G_RIGHT;
 			} else {
 				currentGantryMove.lr = G_STOP;
+			}
+
+			// Drop button input triggers transition to STATE_GRABBING.
+			if (PLAYER_D || millis() - playStartMillis >= playTimeLimit) {
+				playStartMillis = 0;
+				currentGantryMove.fb = G_STOP;
+				currentGantryMove.lr = G_STOP;
+				changeState(STATE_GRAB);
 			}
 			break;
 		case STATE_GRAB:
@@ -415,7 +415,7 @@ bool parkClaw() {
 		return true;
 	}
 
-	Serial.println("Claw parking failed.");
+	sendCom("erro", "clpa");
 	// Error state, took too long.
 	return false;
 }
@@ -456,7 +456,7 @@ bool parkGantry() {
 	currentGantryMove.fb = G_STOP;
 	currentGantryMove.lr = G_STOP;
 
-	Serial.println("Gantry parking failed.");
+	sendCom("erro", "gapa");
 	// Error state, took too long.
 	return false;
 }
@@ -464,6 +464,21 @@ bool parkGantry() {
 void updateGantryMove() {
 	moveFB(currentGantryMove.fb);
 	moveLR(currentGantryMove.lr);
+
+	byte newMove = 0b00000000;
+	bitWrite(newMove, 7, currentGantryMove.fb == 1);
+	bitWrite(newMove, 6, currentGantryMove.fb == -1);
+	bitWrite(newMove, 5, currentGantryMove.lr == -1);
+	bitWrite(newMove, 4, currentGantryMove.lr == 1);
+	bitWrite(newMove, 3, 0); // Reserved
+	bitWrite(newMove, 2, 0); // Reserved
+	bitWrite(newMove, 1, 0); // Reserved
+	bitWrite(newMove, 0, 0); // Reserved
+
+	if (newMove != lastGantryMove) {
+		lastGantryMove = newMove;
+		sendCom("move", (String)lastGantryMove);
+	}
 }
 
 void emergencyStop() {

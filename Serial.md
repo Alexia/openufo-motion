@@ -22,7 +22,7 @@ Example, STATE_PARKED_CREDITS:
 
 ### Current Movement Information (byte, sent as integer)
 
-(TODO: Implement)
+(TODO: Finish implementation.)
 
 Byte position is left to right. For the directions 1 indicates movement is traveling in that direction. For the claw 1 indicates the claw is closed.
 
@@ -129,5 +129,18 @@ Sent when the total credits changes.
 Example, five credits:
 
     cred:5
+
+### Error (string)
+
+Unrecoverable error states.
+
+| string | Description                |
+| ------ | -------------------------- |
+| gapa   | The gantry failed to park. |
+| clpa   | The claw failed to park.   |
+
+Example, the gantry failed to park:
+
+    erro:gapa
 
 ## Receive
