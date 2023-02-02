@@ -167,11 +167,11 @@ Example, the gantry failed to park:
 
 ## Receive
 
+An acknowledgement short word `ack`(acknowledge) with be returned with the original short word or `fail`.
+
 ### Set Operations
 
 Use the `set` short word to change machine settings. These settings are temporary unless saved to EEPROM with `save`.
-
-An acknowledgement short word `ack`(acknowledge) with be returned with `set` or `fail`.
 
 Example, `set`:
 
@@ -252,3 +252,35 @@ Examples:
 
     cred:+1
     cred:-1
+
+### Emergency Stop (null)
+
+Calls emergencyStop() which immediately releases all motors and the claw. The state machine is moved to STATE_ERROR.
+
+Examples:
+
+    emst:
+
+### Clear Error (null)
+
+Clear the state machine and reset to STATE_BOOT. This is mainly used to clear STATE_ERROR. Behavior when clearing from other states may have unexpected behavior.
+
+Examples:
+
+    cler:
+
+### Gantry Park (null)
+
+Park the gantry.
+
+Example:
+
+    gapa:
+
+### Claw Park (null)
+
+Park the claw.
+
+Example:
+
+    clpa:

@@ -83,6 +83,11 @@ void loop() {
 				delayWithUpdates(500);
 				digitalWrite(LED_ERROR_PIN, LOW);
 				delayWithUpdates(500);
+				doUpdates();
+				if (currentState != STATE_ERROR) {
+					// Error state was cleared with the cler short word.
+					break;
+				}
 			}
 			break;
 		case STATE_PARKED_ATTRACT:
@@ -199,10 +204,6 @@ void updateLEDLastMillis() {
 }
 
 void updateCredits() {
-	if (totalCredits < 0) {
-		totalCredits = 0;
-	}
-
 	if ((SW_TOKEN_CREDIT_PRESSED || SW_SERVICE_CREDIT_PRESSED) && creditDetectStartMillis == 0) {
 		addCredit(1);
 	}
@@ -344,16 +345,44 @@ void processCommands(String shortWord, String parameters) {
 	}
 
 	if (shortWord == "cred") {
+		bool credSuccess = false;
 		if (parameters.length() >= 2) {
 			String sign = parameters.substring(0, 1);
 			String amount = parameters.substring(1);
 			if (sign == "+") {
 				addCredit(constrain(amount.toInt(), 0, 100));
+				credSuccess = true;
 			}
 			if (sign == "-") {
 				subtractCredit(constrain(amount.toInt(), 0, 100));
+				credSuccess = true;
 			}
 		}
+		if (credSuccess) {
+			sendCom("ack", shortWord);
+		} else {
+			sendCom("ack", "fail");
+		}
+	}
+
+	if (shortWord == "emst") {
+		emergencyStop();
+		changeState(STATE_ERROR);
+		sendCom("ack", shortWord);
+	}
+
+	if (shortWord == "cler") {
+		changeState(STATE_BOOT);
+		sendCom("ack", shortWord);
+	}
+
+	if (shortWord == "gapa") {
+		parkGantry();
+		sendCom("ack", shortWord);
+	}
+
+	if (shortWord == "clpa") {
+		parkClaw();
 		sendCom("ack", shortWord);
 	}
 }
@@ -625,6 +654,7 @@ void emergencyStop() {
 	currentGantryMove.fb = G_STOP;
 	currentGantryMove.lr = G_STOP;
 	currentGantryMove.ud = G_STOP;
+	moveClaw(0);
 }
 
 // 1 = Forwards towards the player.
