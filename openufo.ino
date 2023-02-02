@@ -66,10 +66,10 @@ void updateCredits() {
 
 void doUpdates() {
 	updateSwitches();
+	updateCredits();	// Must happen after updateSwitches();
 	updateGantryMove(); // MUST HAPPEN OUTSIDE OF THE STATES!  Otherwise moves or stops may never occur.
 	updateLEDLastMillis();
-
-	updateCredits(); // Must happen after updateSwitches();
+	readCom(); // This goes last.
 }
 
 void loop() {
@@ -215,8 +215,6 @@ void loop() {
 		default:
 			break;
 	}
-
-	readCom();
 }
 
 void changeState(int state) {
@@ -294,28 +292,36 @@ void processCommands(String shortWord, String parameters) {
 			String lr = parameters.substring(1, 2);
 			String ud = parameters.substring(2, 3);
 
-			if (fb == "f") {
-				currentGantryMove.fb = G_FORWARD;
-			} else if (fb == "b") {
-				currentGantryMove.fb = G_BACKWARD;
-			} else {
-				currentGantryMove.fb = G_STOP;
+			if (fb != "n") {
+				if (fb == "f") {
+					currentGantryMove.fb = G_FORWARD;
+				} else if (fb == "b") {
+					currentGantryMove.fb = G_BACKWARD;
+				} else {
+					currentGantryMove.fb = G_STOP;
+				}
 			}
-			if (lr == "l") {
-				currentGantryMove.lr = G_LEFT;
-			} else if (lr == "r") {
-				currentGantryMove.lr = G_RIGHT;
-			} else {
-				currentGantryMove.lr = G_STOP;
+
+			if (lr != "n") {
+				if (lr == "l") {
+					currentGantryMove.lr = G_LEFT;
+				} else if (lr == "r") {
+					currentGantryMove.lr = G_RIGHT;
+				} else {
+					currentGantryMove.lr = G_STOP;
+				}
 			}
-			if (ud == "u") {
-				currentGantryMove.ud = G_UP;
-			} else if (ud == "d") {
-				// Temporarily disabled until I figure out if it is possible to accidentally unwind the claw string this way.
-				// currentGantryMove.ud = G_DOWN;
-				currentGantryMove.ud = G_STOP;
-			} else {
-				currentGantryMove.ud = G_STOP;
+
+			if (ud != "n") {
+				if (ud == "u") {
+					currentGantryMove.ud = G_UP;
+				} else if (ud == "d") {
+					// Temporarily disabled until I figure out if it is possible to accidentally unwind the claw string this way.
+					// currentGantryMove.ud = G_DOWN;
+					currentGantryMove.ud = G_STOP;
+				} else {
+					currentGantryMove.ud = G_STOP;
+				}
 			}
 			sendCom("ack", shortWord);
 		}
