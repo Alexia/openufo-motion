@@ -243,3 +243,12 @@ The data format is three characters corresponding to the three directions of tra
 Example, move backward, right, and stop up/down:
 
     move:brs
+
+### Credit Add/Subtract (string)
+
+Add or subtract a credit from the current total. Use a + or - sign with the number of credits to add or subtract. Attempting to send an amount greater than `UINT16_MAX` or `long` data type will result in overflow math.(Don't do this.) The total credits that can be counted is UINT16_MAX or 65,535.
+
+Examples:
+
+    cred:+1
+    cred:-1

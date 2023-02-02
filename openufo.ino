@@ -39,31 +39,6 @@ void initClaw() {
 	analogWrite(CLAW_PWM_PIN, 0);
 }
 
-void updateLEDLastMillis() {
-	if (millis() - flashLEDLastMillis >= 500) {
-		flashLEDLastMillis = millis();
-		flashLEDCurrentState = !flashLEDCurrentState;
-	}
-}
-
-void updateCredits() {
-	if (totalCredits < 0) {
-		totalCredits = 0;
-	}
-
-	if ((SW_TOKEN_CREDIT_PRESSED || SW_SERVICE_CREDIT_PRESSED) && creditDetectStartMillis == 0) {
-		totalCredits++;
-		sendCom("cred", (String)totalCredits);
-	}
-
-	if (creditDetectStartMillis == 0) {
-		creditDetectStartMillis = millis();
-	}
-	if (millis() - creditDetectStartMillis >= creditDetectPulseMs) {
-		creditDetectStartMillis = 0;
-	}
-}
-
 void doUpdates() {
 	updateSwitches();
 	updateCredits();	// Must happen after updateSwitches();
@@ -137,8 +112,7 @@ void loop() {
 			// Input allowed from joystick only; triggers transition to STATE_PLAYER_CONTROL.
 			// TODO: This should only transition when moving away from the parked position.  Some machines start from the right.
 			if (PLAYER_F || PLAYER_B || PLAYER_L || PLAYER_R) {
-				totalCredits--;
-				sendCom("cred", (String)totalCredits);
+				subtractCredit(1);
 				playStartMillis = millis();
 				changeState(STATE_PLAYER_CONTROL);
 			}
@@ -215,6 +189,52 @@ void loop() {
 		default:
 			break;
 	}
+}
+
+void updateLEDLastMillis() {
+	if (millis() - flashLEDLastMillis >= 500) {
+		flashLEDLastMillis = millis();
+		flashLEDCurrentState = !flashLEDCurrentState;
+	}
+}
+
+void updateCredits() {
+	if (totalCredits < 0) {
+		totalCredits = 0;
+	}
+
+	if ((SW_TOKEN_CREDIT_PRESSED || SW_SERVICE_CREDIT_PRESSED) && creditDetectStartMillis == 0) {
+		addCredit(1);
+	}
+
+	if (creditDetectStartMillis == 0) {
+		creditDetectStartMillis = millis();
+	}
+	if (millis() - creditDetectStartMillis >= creditDetectPulseMs) {
+		creditDetectStartMillis = 0;
+	}
+}
+
+void addCredit(uint16_t amount) {
+	if ((unsigned long)totalCredits + (unsigned long)amount >= UINT16_MAX) {
+		Serial.println(UINT16_MAX);
+		totalCredits = UINT16_MAX;
+	} else {
+		Serial.println("add");
+		totalCredits += amount;
+	}
+	sendCom("cred", (String)totalCredits);
+}
+
+void subtractCredit(uint16_t amount) {
+	if ((unsigned long)totalCredits - (unsigned long)amount <= 0) {
+		Serial.println("0");
+		totalCredits = 0;
+	} else {
+		Serial.println("sub");
+		totalCredits -= amount;
+	}
+	sendCom("cred", (String)totalCredits);
 }
 
 void changeState(int state) {
@@ -325,6 +345,20 @@ void processCommands(String shortWord, String parameters) {
 			}
 			sendCom("ack", shortWord);
 		}
+	}
+
+	if (shortWord == "cred") {
+		if (parameters.length() >= 2) {
+			String sign = parameters.substring(0, 1);
+			String amount = parameters.substring(1);
+			if (sign == "+") {
+				addCredit(min(amount.toInt(), UINT16_MAX));
+			}
+			if (sign == "-") {
+				subtractCredit(min(amount.toInt(), UINT16_MAX));
+			}
+		}
+		sendCom("ack", shortWord);
 	}
 }
 
