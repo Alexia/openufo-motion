@@ -93,8 +93,12 @@ void loop() {
 		case STATE_PROGRAM:
 			// Programming mode blocks all other states until it exits.
 		case STATE_BOOT:
+			// Tell any listeners the motion controller version.
 			sendCom("vers", OPENUFO_VERSION);
+			// Load EEPROM Settings
+			// loadEEPROMSettings();
 			changeState(STATE_PARKED_ATTRACT);
+			break;
 		case STATE_ERROR:
 			// If we are in an error state or failed boot prevent all operations until powered off.
 			// This is intended for safety to prevent damage to the machine and operator.
