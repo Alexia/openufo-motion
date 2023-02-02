@@ -1,6 +1,5 @@
 #include "config.h"
 #include <AFMotor.h>
-#include <SerialTransfer.h>
 
 // Limit Switch Status
 bool LIMIT_F = false;
@@ -28,11 +27,13 @@ byte internalSwitchState = 0b00000000;
 
 // Motor Setup
 AF_DCMotor MT_UD(1, MOTOR12_64KHZ);
-// AF_DCMotor CLAW(2, MOTOR12_64KHZ);
 AF_DCMotor MT_FB(3, MOTOR34_64KHZ);
 AF_DCMotor MT_LR(4, MOTOR34_64KHZ);
 
-SerialTransfer com;
+byte gantryFBSpeed = DEFAULT_SPEED_FB;
+byte gantryLRSpeed = DEFAULT_SPEED_LR;
+byte gantryUDSpeed = DEFAULT_SPEED_UD;
+byte clawStrength = DEFAULT_STRENGTH_CLAW;
 
 // Switch setup for INPUT_PULLUP.
 #define NUM_SW 15

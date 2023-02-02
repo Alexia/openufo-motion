@@ -130,6 +130,16 @@ Example, five credits:
 
     cred:5
 
+### Gantry Speed (byte, sent as integer)
+
+Sent when the motor speed is changed. Multiple are sent at the same time and they can differ based on the set:sp{fb|lr|ud} command.
+
+Example, 10011001:
+
+    spfb:153
+    splr:153
+    spud:153
+
 ### Error (string)
 
 Unrecoverable error states.
@@ -144,3 +154,49 @@ Example, the gantry failed to park:
     erro:gapa
 
 ## Receive
+
+### Set Operations
+
+Use the `set` short word to change machine settings. These settings are temporary unless saved to EEPROM with `save`.
+
+An acknowledgement short word `ack`(acknowledge) with be returned with `set` or `fail`.
+
+Example, `set`:
+
+    ack:set
+
+Example, `fail`:
+
+    ack:fail
+
+#### Set Gantry Forward/Backward Speed (byte, sent as integer)
+
+Set the forward/backward speed of the gantry. Note: The machine will enforce its minimum and maximum limits defined for the motor.
+
+Example, 10011001:
+
+    set:spfb:153
+
+#### Set Gantry Left/Right Speed (byte, sent as integer)
+
+Set the left/right speed of the gantry. Note: The machine will enforce its minimum and maximum limits defined for the motor.
+
+Example, 10011001:
+
+    set:splr:153
+
+#### Set Gantry Forward/Backward Speed (byte, sent as integer)
+
+Set the up/down speed of the gantry. Note: The machine will enforce its minimum and maximum limits defined for the motor.
+
+Example, 10011001:
+
+    set:spud:153
+
+#### Set Claw Strength (byte, sent as integer)
+
+Set the strength of the claw.
+
+Example, 10011001:
+
+    set:clst:153

@@ -10,7 +10,7 @@
 #define DEFAULT_SPEED_FB 255 // 0-255
 #define DEFAULT_SPEED_LR 255 // 0-255
 #define DEFAULT_SPEED_UD 255 // 0-255
-// 153(60%) is the recommended minimum for 24V motors.
+// 153(60%) is the recommended minimum for 24V motors with a L293D motor controller.
 #define MINIMUM_SPEED 153
 
 #define CLAW_PWM_PIN 3

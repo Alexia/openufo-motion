@@ -16,7 +16,7 @@ void setup() {
 	} else {
 		changeState(STATE_ERROR);
 	}
-	setDefaultSpeed();
+	setGantrySpeed();
 }
 
 void initSwitches() {
@@ -209,6 +209,8 @@ void loop() {
 		default:
 			break;
 	}
+
+	readCom();
 }
 
 void changeState(int state) {
@@ -216,13 +218,69 @@ void changeState(int state) {
 	sendCom("stat", (String)state);
 }
 
+void startCom() {
+	Serial.begin(115200);
+}
+
 void sendCom(String word, String data) {
 	Serial.println(word + ":" + data);
 }
 
-void startCom() {
-	Serial.begin(115200);
-	com.begin(Serial);
+void readCom() {
+	String data;
+	if (Serial.available() > 0) {
+		data = Serial.readStringUntil('\n');
+		int splitPos = data.indexOf(":");
+		if (splitPos > 0) {
+			String shortWord = data.substring(0, splitPos);
+			String parameters = data.substring(splitPos + 1);
+			processCommands(shortWord, parameters);
+		}
+	}
+}
+
+void processCommands(String shortWord, String parameters) {
+	if (shortWord == "set") {
+		bool set = false;
+		int splitPos = parameters.indexOf(":");
+		if (splitPos > 0) {
+			String setting = parameters.substring(0, splitPos);
+			String value = parameters.substring(splitPos + 1);
+
+			// Claw Strength
+			if (setting == "clst") {
+				clawStrength = constrain(value.toInt(), 0, 255);
+				set = true;
+			}
+
+			// Gantry FB Speed
+			if (setting == "spfb") {
+				gantryFBSpeed = constrain(value.toInt(), MINIMUM_SPEED, 255);
+				setGantrySpeed();
+				set = true;
+			}
+
+			// Gantry LR Speed
+			if (setting == "splr") {
+				gantryLRSpeed = constrain(value.toInt(), MINIMUM_SPEED, 255);
+				setGantrySpeed();
+				set = true;
+			}
+
+			// Gantry UD Speed
+			if (setting == "spud") {
+				gantryUDSpeed = constrain(value.toInt(), MINIMUM_SPEED, 255);
+				setGantrySpeed();
+				set = true;
+			}
+		}
+
+		if (set) {
+			sendCom("ack", shortWord);
+		} else {
+			sendCom("ack", "fail");
+		}
+	}
 }
 
 void updateSwitches() {
@@ -336,18 +394,21 @@ void clack() {
 	delay(500);
 }
 
-// Sets a default speed for all motors.
-void setDefaultSpeed() {
-	MT_UD.setSpeed(DEFAULT_SPEED_UD);
-	MT_FB.setSpeed(DEFAULT_SPEED_FB);
-	MT_LR.setSpeed(DEFAULT_SPEED_LR);
+// Set the defined speed for all motors.
+void setGantrySpeed() {
+	MT_FB.setSpeed(gantryFBSpeed);
+	MT_LR.setSpeed(gantryLRSpeed);
+	MT_UD.setSpeed(gantryUDSpeed);
+	sendCom("spfb", (String)gantryFBSpeed);
+	sendCom("splr", (String)gantryLRSpeed);
+	sendCom("spud", (String)gantryUDSpeed);
 }
 
 // Sets a parking speed for all motors.
 void setParkingSpeed() {
-	MT_UD.setSpeed(PARKING_SPEED);
 	MT_FB.setSpeed(PARKING_SPEED);
 	MT_LR.setSpeed(PARKING_SPEED);
+	MT_UD.setSpeed(PARKING_SPEED);
 }
 
 bool isAllParked() {
@@ -595,7 +656,7 @@ void doGrab() {
 void moveClaw(int state) {
 	switch (state) {
 		case 1: // Close
-			analogWrite(CLAW_PWM_PIN, DEFAULT_STRENGTH_CLAW);
+			analogWrite(CLAW_PWM_PIN, clawStrength);
 			break;
 		case 0: // Stop
 		default:
