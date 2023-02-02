@@ -246,7 +246,7 @@ Example, move backward, right, and stop up/down:
 
 ### Credit Add/Subtract (string)
 
-Add or subtract a credit from the current total. Use a + or - sign with the number of credits to add or subtract. Attempting to send an amount greater than `UINT16_MAX` or `long` data type will result in overflow math.(Don't do this.) The total credits that can be counted is UINT16_MAX or 65,535.
+Add or subtract a credit from the current total, 100 maximum at a time. Use a + or - sign with the number of credits to add or subtract. Attempting to send an amount greater than `UINT16_MAX` will result in overflow math.(Don't do this.) The total credits that can be counted is UINT16_MAX or 65,535.
 
 Examples:
 

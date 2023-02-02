@@ -216,22 +216,18 @@ void updateCredits() {
 }
 
 void addCredit(uint16_t amount) {
-	if ((unsigned long)totalCredits + (unsigned long)amount >= UINT16_MAX) {
-		Serial.println(UINT16_MAX);
+	if (totalCredits + amount >= UINT16_MAX || (totalCredits + amount) < totalCredits) {
 		totalCredits = UINT16_MAX;
 	} else {
-		Serial.println("add");
 		totalCredits += amount;
 	}
 	sendCom("cred", (String)totalCredits);
 }
 
 void subtractCredit(uint16_t amount) {
-	if ((unsigned long)totalCredits - (unsigned long)amount <= 0) {
-		Serial.println("0");
+	if ((totalCredits - amount) <= 0 || (totalCredits - amount) > totalCredits) {
 		totalCredits = 0;
 	} else {
-		Serial.println("sub");
 		totalCredits -= amount;
 	}
 	sendCom("cred", (String)totalCredits);
@@ -352,10 +348,10 @@ void processCommands(String shortWord, String parameters) {
 			String sign = parameters.substring(0, 1);
 			String amount = parameters.substring(1);
 			if (sign == "+") {
-				addCredit(min(amount.toInt(), UINT16_MAX));
+				addCredit(constrain(amount.toInt(), 0, 100));
 			}
 			if (sign == "-") {
-				subtractCredit(min(amount.toInt(), UINT16_MAX));
+				subtractCredit(constrain(amount.toInt(), 0, 100));
 			}
 		}
 		sendCom("ack", shortWord);
