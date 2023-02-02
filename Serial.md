@@ -4,7 +4,7 @@ Serial communication is human readable, but uses short words along with types re
 
 ## Word Format
 
-Short words are four characters in length. If a single word is used abbreviate the word. If multiple words are used then use the first two characters of the first two words.
+Short words are four characters in length.  If a single word is used abbreviate the word.  If multiple words are used then use the first two characters of the first two words.
 
 Examples:
 
@@ -36,7 +36,7 @@ Example, STATE_PARKED_CREDITS:
 
 (TODO: Finish implementation.)
 
-Byte position is left to right. For the directions 1 indicates movement is traveling in that direction. For the claw 1 indicates the claw is closed.
+Byte position is left to right.  For the directions 1 indicates movement is traveling in that direction.  For the claw 1 indicates the claw is closed.
 
 | Pos | Data                   |
 | --- | ---------------------- |
@@ -55,7 +55,7 @@ Example, moving backward and right:
 
 ### Limit Switch Information (byte, sent as integer)
 
-Byte position is leftmost to rightmost. 1 indicates the switch is engaged.
+Byte position is leftmost to rightmost.  1 indicates the switch is engaged.
 
 | Pos | Data       |
 | --- | ---------- |
@@ -74,7 +74,7 @@ Example, limit switches backward and right engaged:
 
 ### Player Switch Information (byte, sent as integer)
 
-Byte position is leftmost to rightmost. 1 indicates the switch is engaged.
+Byte position is leftmost to rightmost.  1 indicates the switch is engaged.
 
 | Pos | Data       |
 | --- | ---------- |
@@ -93,7 +93,7 @@ Example, limit switches backward and right engaged:
 
 ### Internal Switch Information (byte, sent as integer)
 
-Byte position is leftmost to rightmost. 1 indicates the switch is engaged.
+Byte position is leftmost to rightmost.  1 indicates the switch is engaged.
 
 | Pos | Data           |
 | --- | -------------- |
@@ -144,7 +144,7 @@ Example, five credits:
 
 ### Gantry Speed (byte, sent as integer)
 
-Sent when the motor speed is changed. Multiple are sent at the same time and they can differ based on the set:sp{fb|lr|ud} command.
+Sent when the motor speed is changed.  Multiple are sent at the same time and they can differ based on the set:sp{fb|lr|ud} command.
 
 Example, 10011001:
 
@@ -171,7 +171,7 @@ An acknowledgement short word `ack`(acknowledge) with be returned with the origi
 
 ### Set Operations
 
-Use the `set` short word to change machine settings. These settings are temporary unless saved to EEPROM with `save`.
+Use the `set` short word to change machine settings.  These settings are temporary unless saved to EEPROM with `save`.
 
 Example, `set`:
 
@@ -183,7 +183,7 @@ Example, `fail`:
 
 #### Set Gantry Forward/Backward Speed (byte, sent as integer)
 
-Set the forward/backward speed of the gantry. Note: The machine will enforce its minimum and maximum limits defined for the motor.
+Set the forward/backward speed of the gantry.  Note: The machine will enforce its minimum and maximum limits defined for the motor.
 
 Example, 10011001:
 
@@ -191,7 +191,7 @@ Example, 10011001:
 
 #### Set Gantry Left/Right Speed (byte, sent as integer)
 
-Set the left/right speed of the gantry. Note: The machine will enforce its minimum and maximum limits defined for the motor.
+Set the left/right speed of the gantry.  Note: The machine will enforce its minimum and maximum limits defined for the motor.
 
 Example, 10011001:
 
@@ -199,7 +199,7 @@ Example, 10011001:
 
 #### Set Gantry Forward/Backward Speed (byte, sent as integer)
 
-Set the up/down speed of the gantry. Note: The machine will enforce its minimum and maximum limits defined for the motor.
+Set the up/down speed of the gantry.  Note: The machine will enforce its minimum and maximum limits defined for the motor.
 
 Example, 10011001:
 
@@ -236,10 +236,10 @@ Example:
 
 ### Move Gantry, Continuous (string, three characters {f|b|s|n}{l|r|s|n}{u|d|s|n})
 
-Instruct the gantry to `move` continously in the specified direction. This is equivalent to holding the joystick in that direction. The machine will still obey limit switches and stop movement. The movement will not restart after a limit switch is triggerred.
+Instruct the gantry to `move` continously in the specified direction.  This is equivalent to holding the joystick in that direction.  The machine will still obey limit switches and stop movement.  The movement will not restart after a limit switch is triggerred.
 CAUTION! Do not use with the cabinet door open.
 
-The data format is three characters corresponding to the three directions of travel. All directions accept `s` to stop. All three positions must be sent. Invalid values will stop that direction, but this should not be relied on as it is undefined behavior and may change in the future.
+The data format is three characters corresponding to the three directions of travel.  All directions accept `s` to stop.  All three positions must be sent.  Invalid values will stop that direction, but this should not be relied on as it is undefined behavior and may change in the future.
 
 | Char. | Direction      |
 | ----- | -------------- |
@@ -258,7 +258,7 @@ Example, move backward, right, and stop up/down:
 
 ### Credit Add/Subtract (string)
 
-Add or subtract a credit from the current total, 100 maximum at a time. Use a + or - sign with the number of credits to add or subtract. Attempting to send an amount greater than `UINT16_MAX` will result in overflow math.(Don't do this.) The total credits that can be counted is UINT16_MAX or 65,535.
+Add or subtract a credit from the current total, 100 maximum at a time.  Use a + or - sign with the number of credits to add or subtract.  Attempting to send an amount greater than `UINT16_MAX` will result in overflow math.(Don't do this.) The total credits that can be counted is UINT16_MAX or 65,535.
 
 Examples:
 
@@ -267,7 +267,7 @@ Examples:
 
 ### Emergency Stop (null)
 
-Calls emergencyStop() which immediately releases all motors and the claw. The state machine is moved to STATE_ERROR.
+Calls emergencyStop() which immediately releases all motors and the claw.  The state machine is moved to STATE_ERROR.
 
 Examples:
 
@@ -275,7 +275,7 @@ Examples:
 
 ### Clear Error (null)
 
-Clear the state machine and reset to STATE_BOOT. This is mainly used to clear STATE_ERROR. Behavior when clearing from other states may have unexpected behavior.
+Clear the state machine and reset to STATE_BOOT.  This is mainly used to clear STATE_ERROR.  Behavior when clearing from other states may have unexpected behavior.
 
 Examples:
 
