@@ -14,7 +14,19 @@ Examples:
 
 ## Transmit
 
+### Version (string)
+
+Sends the motion firmware version defined in `config.h`.
+
+The version number uses Semantic Versioning 2.0.0: https://semver.org/spec/v2.0.0.html
+
+Example:
+
+    vers:0.0.1
+
 ### Machine State Update (integer)
+
+Indicates the current state of the state machine logic.
 
 Example, STATE_PARKED_CREDITS:
 
@@ -200,3 +212,7 @@ Set the strength of the claw.
 Example, 10011001:
 
     set:clst:153
+
+### Save to EEPROM
+
+Send the short word `save`

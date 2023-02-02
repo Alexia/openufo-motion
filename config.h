@@ -1,3 +1,5 @@
+#define OPENUFO_VERSION "0.0.1"
+
 // Limit Switches
 #define SW_LIMIT_F_PIN 47
 #define SW_LIMIT_B_PIN 49

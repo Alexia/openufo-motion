@@ -12,7 +12,7 @@ void setup() {
 	clack();
 
 	if (parkAll()) {
-		changeState(STATE_PARKED_ATTRACT);
+		changeState(STATE_BOOT);
 	} else {
 		changeState(STATE_ERROR);
 	}
@@ -93,7 +93,8 @@ void loop() {
 		case STATE_PROGRAM:
 			// Programming mode blocks all other states until it exits.
 		case STATE_BOOT:
-			// This state should never be reached after a normal boot so just fall through to STATE_ERROR.
+			sendCom("vers", OPENUFO_VERSION);
+			changeState(STATE_PARKED_ATTRACT);
 		case STATE_ERROR:
 			// If we are in an error state or failed boot prevent all operations until powered off.
 			// This is intended for safety to prevent damage to the machine and operator.
