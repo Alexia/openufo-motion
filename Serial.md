@@ -38,16 +38,16 @@ Example, STATE_PARKED_CREDITS:
 
 Byte position is left to right. For the directions 1 indicates movement is traveling in that direction. For the claw 1 indicates the claw is closed.
 
-| Pos | Data       |
-| --- | ---------- |
-| 7   | Forward    |
-| 6   | Backward   |
-| 5   | Left       |
-| 4   | Right      |
-| 3   | Up         |
-| 2   | Down       |
-| 1   | Claw       |
-| 0   | (Reserved) |
+| Pos | Data                   |
+| --- | ---------------------- |
+| 7   | Forward                |
+| 6   | Backward               |
+| 5   | Left                   |
+| 4   | Right                  |
+| 3   | Up                     |
+| 2   | Down                   |
+| 1   | Claw (TODO: Implement) |
+| 0   | (Reserved)             |
 
 Example, moving backward and right:
 
@@ -213,6 +213,32 @@ Example, 10011001:
 
     set:clst:153
 
-### Save to EEPROM
+### Save to EEPROM (null, reserved)
 
-Send the short word `save`
+Send the short word `save` to save all settings to the EEPROM.
+Note: In the future the null value may be replaced with a timestamp for comparison purpose.
+
+Example:
+
+    save:
+
+### Move Gantry, Continuous (string, three characters {f|b|s}{l|r|s}{u|d|s})
+
+Instruct the gantry to `move` continously in the specified direction. This is equivalent to holding the joystick in that direction. The machine will still obey limit switches
+CAUTION! Do not use with the cabinet door open.
+
+The data format is three characters corresponding to the three directions of travel. All directions accept `s` to stop. All three positions must be sent. Invalid values will stop that direction, but this should not be relied on as it is undefined behavior and may change in the future.
+
+| Char. | Direction |
+| ----- | --------- |
+| f     | forward   |
+| b     | backward  |
+| l     | left      |
+| r     | right     |
+| u     | up        |
+| d     | down      |
+| s     | stop      |
+
+Example, move backward and right:
+
+    move:brs

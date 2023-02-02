@@ -76,9 +76,10 @@ void loop() {
 	doUpdates();
 
 	// TODO:
-	//  Serial Communication
-	//  Settings/EEPROM
-	//  Fix/rework parking to not block the main loop.  This causes stuff like credit detection to fail.
+	// Serial Communication (In Progress)
+	// Settings/EEPROM
+	// Fix/rework parking to not block the main loop.  This causes stuff like credit detection to fail.
+	// Claw as part of movement/current move.
 
 	// States:
 	// Boot
@@ -286,6 +287,41 @@ void processCommands(String shortWord, String parameters) {
 			sendCom("ack", "fail");
 		}
 	}
+
+	if (shortWord == "move") {
+		if (parameters.length() == 3) {
+			String fb = parameters.substring(0, 1);
+			String lr = parameters.substring(1, 2);
+			String ud = parameters.substring(2, 3);
+			Serial.println(fb);
+
+			if (fb = "f") {
+				currentGantryMove.fb = G_FORWARD;
+			} else if (fb = "b") {
+				currentGantryMove.fb = G_BACKWARD;
+			} else {
+				currentGantryMove.fb = G_STOP;
+			}
+			if (lr = "l") {
+				currentGantryMove.lr = G_LEFT;
+			} else if (lr = "r") {
+				currentGantryMove.lr = G_RIGHT;
+			} else {
+				currentGantryMove.lr = G_STOP;
+			}
+			if (ud = "u") {
+				currentGantryMove.lr = G_UP;
+			} else if (ud = "d") {
+				// Temporarily disabled until I figure out if it is possible to accidentally unwind the claw string this way.
+				// currentGantryMove.lr = G_DOWN;
+			} else {
+				currentGantryMove.lr = G_STOP;
+			}
+			Serial.println(currentGantryMove.fb);
+			Serial.println(currentGantryMove.lr);
+			sendCom("ack", shortWord);
+		}
+	}
 }
 
 void updateSwitches() {
@@ -461,25 +497,26 @@ bool parkClaw() {
 	unsigned long startMillis = millis();
 	unsigned long currentMillis = startMillis;
 
+	currentGantryMove.ud = G_UP;
+
 	while (!isClawParked() && currentMillis - startMillis < 6000) {
 		currentMillis = millis();
 		doUpdates(); // If we are blocking the main loop we have to call doUpdates().
-
-		if (!isClawParked()) {
-			moveUD(1);
-		}
 
 		if (isClawParked()) {
 			break;
 		}
 	}
 
-	moveUD(0);
+	currentGantryMove.ud = G_STOP;
+	updateGantryMove();
 	delayWithUpdates(250); // Shitty debounce.
 
 	if (isClawParked()) {
 		return true;
 	}
+
+	emergencyStop();
 
 	sendCom("erro", "clpa");
 	// Error state, took too long.
@@ -519,8 +556,6 @@ bool parkGantry() {
 	}
 
 	emergencyStop();
-	currentGantryMove.fb = G_STOP;
-	currentGantryMove.lr = G_STOP;
 
 	sendCom("erro", "gapa");
 	// Error state, took too long.
@@ -530,15 +565,16 @@ bool parkGantry() {
 void updateGantryMove() {
 	moveFB(currentGantryMove.fb);
 	moveLR(currentGantryMove.lr);
+	moveUD(currentGantryMove.ud);
 
 	byte newMove = 0b00000000;
-	bitWrite(newMove, 7, currentGantryMove.fb == 1);
-	bitWrite(newMove, 6, currentGantryMove.fb == -1);
-	bitWrite(newMove, 5, currentGantryMove.lr == -1);
-	bitWrite(newMove, 4, currentGantryMove.lr == 1);
-	bitWrite(newMove, 3, 0); // Reserved
-	bitWrite(newMove, 2, 0); // Reserved
-	bitWrite(newMove, 1, 0); // Reserved
+	bitWrite(newMove, 7, currentGantryMove.fb == G_FORWARD);
+	bitWrite(newMove, 6, currentGantryMove.fb == G_BACKWARD);
+	bitWrite(newMove, 5, currentGantryMove.lr == G_LEFT);
+	bitWrite(newMove, 4, currentGantryMove.lr == G_RIGHT);
+	bitWrite(newMove, 3, currentGantryMove.ud == G_UP);
+	bitWrite(newMove, 2, currentGantryMove.ud == G_DOWN);
+	bitWrite(newMove, 1, 0); // Reserved for Claw
 	bitWrite(newMove, 0, 0); // Reserved
 
 	if (newMove != lastGantryMove) {
@@ -552,6 +588,9 @@ void emergencyStop() {
 	MT_FB.run(RELEASE);
 	MT_LR.run(RELEASE);
 	MT_UD.run(RELEASE);
+	currentGantryMove.fb = G_STOP;
+	currentGantryMove.lr = G_STOP;
+	currentGantryMove.ud = G_STOP;
 }
 
 // 1 = Forwards towards the player.
@@ -560,23 +599,23 @@ void emergencyStop() {
 void moveFB(int dir) {
 	readLimitSwitches();
 	switch (dir) {
-		case 1: // Forward
+		case G_FORWARD: // Forward
 			if (!isFLimitTriggered()) {
 				MT_FB.run(BACKWARD); // I'm not swapping the wires.  *Angry elf noises.*
 			} else {
-				currentGantryMove.fb = 0;
+				currentGantryMove.fb = G_STOP;
 				MT_FB.run(RELEASE);
 			}
 			break;
-		case -1: // Backward
+		case G_BACKWARD: // Backward
 			if (!isBLimitTriggered()) {
 				MT_FB.run(FORWARD);
 			} else {
-				currentGantryMove.fb = 0;
+				currentGantryMove.fb = G_STOP;
 				MT_FB.run(RELEASE);
 			}
 			break;
-		case 0: // Stop
+		case G_STOP: // Stop
 		default:
 			MT_FB.run(RELEASE);
 			break;
@@ -589,19 +628,19 @@ void moveFB(int dir) {
 void moveLR(int dir) {
 	readLimitSwitches();
 	switch (dir) {
-		case 1: // Right
+		case G_RIGHT: // Right
 			// No limit switch installed.
 			MT_LR.run(BACKWARD);
 			break;
-		case -1: // Left
+		case G_LEFT: // Left
 			if (!isLLimitTriggered()) {
 				MT_LR.run(FORWARD);
 			} else {
-				currentGantryMove.lr = 0;
+				currentGantryMove.lr = G_STOP;
 				MT_LR.run(RELEASE);
 			}
 			break;
-		case 0: // Stop
+		case G_STOP: // Stop
 		default:
 			MT_LR.run(RELEASE);
 			break;
@@ -614,21 +653,23 @@ void moveLR(int dir) {
 void moveUD(int dir) {
 	readLimitSwitches();
 	switch (dir) {
-		case 1: // Up
+		case G_UP: // Up
 			if (!isULimitTriggered()) {
 				MT_UD.run(BACKWARD);
 			} else {
+				currentGantryMove.ud = G_STOP;
 				MT_UD.run(RELEASE);
 			}
 			break;
-		case -1: // Down
+		case G_DOWN: // Down
 			if (!isDLimitTriggered()) {
 				MT_UD.run(FORWARD);
 			} else {
+				currentGantryMove.ud = G_STOP;
 				MT_UD.run(RELEASE);
 			}
 			break;
-		case 0: // Stop
+		case G_STOP: // Stop
 		default:
 			MT_UD.run(RELEASE);
 			break;
@@ -639,20 +680,20 @@ void doGrab() {
 	unsigned long startMillis = millis();
 	unsigned long currentMillis = startMillis;
 
-	while (!isDLimitTriggered() && currentMillis - startMillis < 2000) {
+	currentGantryMove.ud = G_DOWN;
+
+	while (!isDLimitTriggered() && currentMillis - startMillis < GRAB_DESCENT_TIME_MAX_MS) {
 		currentMillis = millis();
 		doUpdates(); // If we are blocking the main loop we have to call doUpdates().
-
-		if (!isDLimitTriggered()) {
-			moveUD(-1);
-		}
 
 		if (isDLimitTriggered()) {
 			break;
 		}
 	}
 
-	moveUD(0);
+	currentGantryMove.ud = G_STOP;
+	updateGantryMove();
+
 	moveClaw(1);
 }
 

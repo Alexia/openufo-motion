@@ -58,15 +58,21 @@ int currentState = -1;
 #define G_BACKWARD -1
 #define G_LEFT -1
 #define G_RIGHT 1
+#define G_UP 1
+#define G_DOWN -1
 #define G_STOP 0
 
 struct gantryMove {
 	int fb;
 	int lr;
+	int ud;
 };
 
-gantryMove currentGantryMove = {G_STOP, G_STOP};
+gantryMove currentGantryMove = {G_STOP, G_STOP, G_STOP};
 byte lastGantryMove = 0b00000000;
+
+// The maximum amount in time in milliseconds the claw can descent towards the prize floor before stopping.
+#define GRAB_DESCENT_TIME_MAX_MS 3000
 
 // Drop button LED state and millisecond tracker for all LEDs.
 //  0 - Off
