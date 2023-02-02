@@ -293,33 +293,30 @@ void processCommands(String shortWord, String parameters) {
 			String fb = parameters.substring(0, 1);
 			String lr = parameters.substring(1, 2);
 			String ud = parameters.substring(2, 3);
-			Serial.println(fb);
 
-			if (fb = "f") {
+			if (fb == "f") {
 				currentGantryMove.fb = G_FORWARD;
-			} else if (fb = "b") {
+			} else if (fb == "b") {
 				currentGantryMove.fb = G_BACKWARD;
 			} else {
 				currentGantryMove.fb = G_STOP;
 			}
-			if (lr = "l") {
+			if (lr == "l") {
 				currentGantryMove.lr = G_LEFT;
-			} else if (lr = "r") {
+			} else if (lr == "r") {
 				currentGantryMove.lr = G_RIGHT;
 			} else {
 				currentGantryMove.lr = G_STOP;
 			}
-			if (ud = "u") {
+			if (ud == "u") {
 				currentGantryMove.ud = G_UP;
-			} else if (ud = "d") {
+			} else if (ud == "d") {
 				// Temporarily disabled until I figure out if it is possible to accidentally unwind the claw string this way.
 				// currentGantryMove.ud = G_DOWN;
+				currentGantryMove.ud = G_STOP;
 			} else {
 				currentGantryMove.ud = G_STOP;
 			}
-			Serial.println(currentGantryMove.fb);
-			Serial.println(currentGantryMove.lr);
-			Serial.println(currentGantryMove.ud);
 			sendCom("ack", shortWord);
 		}
 	}

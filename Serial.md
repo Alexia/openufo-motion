@@ -224,7 +224,7 @@ Example:
 
 ### Move Gantry, Continuous (string, three characters {f|b|s}{l|r|s}{u|d|s})
 
-Instruct the gantry to `move` continously in the specified direction. This is equivalent to holding the joystick in that direction. The machine will still obey limit switches
+Instruct the gantry to `move` continously in the specified direction. This is equivalent to holding the joystick in that direction. The machine will still obey limit switches and stop movement. The movement will not restart after a limit switch is triggerred.
 CAUTION! Do not use with the cabinet door open.
 
 The data format is three characters corresponding to the three directions of travel. All directions accept `s` to stop. All three positions must be sent. Invalid values will stop that direction, but this should not be relied on as it is undefined behavior and may change in the future.
