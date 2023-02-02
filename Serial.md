@@ -215,12 +215,24 @@ Example, 10011001:
 
 ### Save to EEPROM (null, reserved)
 
+(TODO: Implement)
+
 Send the short word `save` to save all settings to the EEPROM.
 Note: In the future the null value may be replaced with a timestamp for comparison purpose.
 
 Example:
 
     save:
+
+### Read EEPROM Settings (byte(s))
+
+(TODO: Implement)
+
+Reads the settings from EEPROM and sends them back.
+
+Example:
+
+    read:
 
 ### Move Gantry, Continuous (string, three characters {f|b|s|n}{l|r|s|n}{u|d|s|n})
 
