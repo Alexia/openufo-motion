@@ -310,15 +310,16 @@ void processCommands(String shortWord, String parameters) {
 				currentGantryMove.lr = G_STOP;
 			}
 			if (ud = "u") {
-				currentGantryMove.lr = G_UP;
+				currentGantryMove.ud = G_UP;
 			} else if (ud = "d") {
 				// Temporarily disabled until I figure out if it is possible to accidentally unwind the claw string this way.
-				// currentGantryMove.lr = G_DOWN;
+				// currentGantryMove.ud = G_DOWN;
 			} else {
-				currentGantryMove.lr = G_STOP;
+				currentGantryMove.ud = G_STOP;
 			}
 			Serial.println(currentGantryMove.fb);
 			Serial.println(currentGantryMove.lr);
+			Serial.println(currentGantryMove.ud);
 			sendCom("ack", shortWord);
 		}
 	}
@@ -341,8 +342,8 @@ void readPlayerSwitches() {
 	bitWrite(newState, 7, PLAYER_F);
 	bitWrite(newState, 6, PLAYER_B);
 	bitWrite(newState, 5, PLAYER_L);
-	bitWrite(newState, 4, PLAYER_R); // Reserved
-	bitWrite(newState, 3, 0);		 // Reserved
+	bitWrite(newState, 4, PLAYER_R);
+	bitWrite(newState, 3, 0); // Reserved
 	bitWrite(newState, 2, PLAYER_D);
 	bitWrite(newState, 1, 0); // Reserved
 	bitWrite(newState, 0, 0); // Reserved
