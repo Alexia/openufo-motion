@@ -4,9 +4,10 @@
 // Limit Switch Status
 bool LIMIT_F = false;
 bool LIMIT_B = false;
+bool LIMIT_L = false;
+bool LIMIT_R = false;
 bool LIMIT_U = false;
 bool LIMIT_D = false;
-bool LIMIT_L = false;
 byte limitSwitchState = 0b00000000;
 
 // Player Joystick Status
@@ -36,8 +37,8 @@ byte gantryUDSpeed = DEFAULT_SPEED_UD;
 byte clawStrength = DEFAULT_STRENGTH_CLAW;
 
 // Switch setup for INPUT_PULLUP.
-#define NUM_SW 15
-const uint8_t SW_PINS[NUM_SW] = {SW_LIMIT_F_PIN, SW_LIMIT_B_PIN, SW_LIMIT_U_PIN, SW_LIMIT_D_PIN, SW_LIMIT_L_PIN, SW_DIR_F_PIN, SW_DIR_B_PIN, SW_DIR_L_PIN, SW_DIR_R_PIN, SW_DIR_D_PIN, SW_TOKEN_CREDIT_PIN, SW_SERVICE_CREDIT_PIN, SW_PROGRAM_PIN, SW_TILT_PIN, SW_PRIZE_DETECT_PIN};
+#define NUM_SW 16
+const uint8_t SW_PINS[NUM_SW] = {SW_LIMIT_F_PIN, SW_LIMIT_B_PIN, SW_LIMIT_L_PIN, SW_LIMIT_R_PIN, SW_LIMIT_U_PIN, SW_LIMIT_D_PIN, SW_DIR_F_PIN, SW_DIR_B_PIN, SW_DIR_L_PIN, SW_DIR_R_PIN, SW_DIR_D_PIN, SW_TOKEN_CREDIT_PIN, SW_SERVICE_CREDIT_PIN, SW_PROGRAM_PIN, SW_TILT_PIN, SW_PRIZE_DETECT_PIN};
 
 // State machine states.
 #define STATE_PROGRAM -3

@@ -1,4 +1,4 @@
-#include "openufo.h"
+#include "openufo-motion.h"
 
 void setup() {
 	initSwitches();
@@ -385,6 +385,15 @@ void processCommands(String shortWord, String parameters) {
 		parkClaw();
 		sendCom("ack", shortWord);
 	}
+
+	if (shortWord == "claw") {
+		if (parameters == "1" || parameters == "0") {
+			moveClaw(parameters.toInt());
+			sendCom("ack", shortWord);
+		} else {
+			sendCom("ack", "fail");
+		}
+	}
 }
 
 void updateSwitches() {
@@ -419,15 +428,16 @@ void readPlayerSwitches() {
 void readLimitSwitches() {
 	LIMIT_F = !digitalRead(SW_LIMIT_F_PIN);
 	LIMIT_B = !digitalRead(SW_LIMIT_B_PIN);
+	LIMIT_L = !digitalRead(SW_LIMIT_L_PIN);
+	LIMIT_R = !digitalRead(SW_LIMIT_R_PIN);
 	LIMIT_U = !digitalRead(SW_LIMIT_U_PIN);
 	LIMIT_D = !digitalRead(SW_LIMIT_D_PIN);
-	LIMIT_L = !digitalRead(SW_LIMIT_L_PIN);
 
 	byte newState = 0b00000000;
 	bitWrite(newState, 7, LIMIT_F);
 	bitWrite(newState, 6, LIMIT_B);
 	bitWrite(newState, 5, LIMIT_L);
-	bitWrite(newState, 4, 0); // Reserved - LIMIT_R
+	bitWrite(newState, 4, LIMIT_R);
 	bitWrite(newState, 3, LIMIT_U);
 	bitWrite(newState, 2, LIMIT_D);
 	bitWrite(newState, 1, 0); // Reserved - Claw Open
@@ -472,6 +482,10 @@ bool isBLimitTriggered() {
 
 bool isLLimitTriggered() {
 	return LIMIT_L;
+}
+
+bool isRLimitTriggered() {
+	return LIMIT_R;
 }
 
 bool isULimitTriggered() {
@@ -693,8 +707,12 @@ void moveLR(int dir) {
 	readLimitSwitches();
 	switch (dir) {
 		case G_RIGHT: // Right
-			// No limit switch installed.
-			MT_LR.run(BACKWARD);
+			if (!isRLimitTriggered()) {
+				MT_LR.run(BACKWARD);
+			} else {
+				currentGantryMove.lr = G_STOP;
+				MT_LR.run(RELEASE);
+			}
 			break;
 		case G_LEFT: // Left
 			if (!isLLimitTriggered()) {

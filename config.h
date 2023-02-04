@@ -6,6 +6,7 @@
 #define SW_LIMIT_U_PIN 45
 #define SW_LIMIT_D_PIN 53
 #define SW_LIMIT_L_PIN 51
+#define SW_LIMIT_R_PIN 42
 
 // Motor Speeds
 #define PARKING_SPEED 255
