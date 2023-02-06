@@ -1,5 +1,5 @@
 #include "config.h"
-#include <AFMotor.h>
+#include <L298N.h>
 
 // Limit Switch Status
 bool LIMIT_F = false;
@@ -27,9 +27,9 @@ bool SW_PRIZE_DETECTED = false;
 byte internalSwitchState = 0b00000000;
 
 // Motor Setup
-AF_DCMotor MT_UD(1, MOTOR12_64KHZ);
-AF_DCMotor MT_FB(3, MOTOR34_64KHZ);
-AF_DCMotor MT_LR(4, MOTOR34_64KHZ);
+L298N MT_UD(MT_UD_E_PIN, MT_UD_1_PIN, MT_UD_2_PIN);
+L298N MT_FB(MT_FB_E_PIN, MT_FB_1_PIN, MT_FB_2_PIN);
+L298N MT_LR(MT_LR_E_PIN, MT_LR_1_PIN, MT_LR_2_PIN);
 
 byte gantryFBSpeed = DEFAULT_SPEED_FB;
 byte gantryLRSpeed = DEFAULT_SPEED_LR;

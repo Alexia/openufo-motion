@@ -1,5 +1,16 @@
 #define OPENUFO_VERSION "0.0.1"
 
+// Motor_Directions_Function_PIN
+#define MT_FB_E_PIN 8
+#define MT_FB_1_PIN 10
+#define MT_FB_2_PIN 9
+#define MT_LR_E_PIN 13
+#define MT_LR_1_PIN 11
+#define MT_LR_2_PIN 12
+#define MT_UD_E_PIN 7
+#define MT_UD_1_PIN 5
+#define MT_UD_2_PIN 6
+
 // Limit Switches
 #define SW_LIMIT_F_PIN 47
 #define SW_LIMIT_B_PIN 49

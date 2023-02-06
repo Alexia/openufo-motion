@@ -662,9 +662,9 @@ void updateGantryMove() {
 
 void emergencyStop() {
 	// Use an explicit stop that bypasses any code fluff.
-	MT_FB.run(RELEASE);
-	MT_LR.run(RELEASE);
-	MT_UD.run(RELEASE);
+	MT_FB.stop();
+	MT_LR.stop();
+	MT_UD.stop();
 	currentGantryMove.fb = G_STOP;
 	currentGantryMove.lr = G_STOP;
 	currentGantryMove.ud = G_STOP;
@@ -679,23 +679,23 @@ void moveFB(int dir) {
 	switch (dir) {
 		case G_FORWARD: // Forward
 			if (!isFLimitTriggered()) {
-				MT_FB.run(BACKWARD); // I'm not swapping the wires.  *Angry elf noises.*
+				MT_FB.backward(); // I'm not swapping the wires.  *Angry elf noises.*
 			} else {
 				currentGantryMove.fb = G_STOP;
-				MT_FB.run(RELEASE);
+				MT_FB.stop();
 			}
 			break;
 		case G_BACKWARD: // Backward
 			if (!isBLimitTriggered()) {
-				MT_FB.run(FORWARD);
+				MT_FB.forward();
 			} else {
 				currentGantryMove.fb = G_STOP;
-				MT_FB.run(RELEASE);
+				MT_FB.stop();
 			}
 			break;
 		case G_STOP: // Stop
 		default:
-			MT_FB.run(RELEASE);
+			MT_FB.stop();
 			break;
 	}
 }
@@ -708,23 +708,23 @@ void moveLR(int dir) {
 	switch (dir) {
 		case G_RIGHT: // Right
 			if (!isRLimitTriggered()) {
-				MT_LR.run(BACKWARD);
+				MT_LR.backward();
 			} else {
 				currentGantryMove.lr = G_STOP;
-				MT_LR.run(RELEASE);
+				MT_LR.stop();
 			}
 			break;
 		case G_LEFT: // Left
 			if (!isLLimitTriggered()) {
-				MT_LR.run(FORWARD);
+				MT_LR.forward();
 			} else {
 				currentGantryMove.lr = G_STOP;
-				MT_LR.run(RELEASE);
+				MT_LR.stop();
 			}
 			break;
 		case G_STOP: // Stop
 		default:
-			MT_LR.run(RELEASE);
+			MT_LR.stop();
 			break;
 	}
 }
@@ -737,23 +737,23 @@ void moveUD(int dir) {
 	switch (dir) {
 		case G_UP: // Up
 			if (!isULimitTriggered()) {
-				MT_UD.run(BACKWARD);
+				MT_UD.backward();
 			} else {
 				currentGantryMove.ud = G_STOP;
-				MT_UD.run(RELEASE);
+				MT_UD.stop();
 			}
 			break;
 		case G_DOWN: // Down
 			if (!isDLimitTriggered()) {
-				MT_UD.run(FORWARD);
+				MT_UD.forward();
 			} else {
 				currentGantryMove.ud = G_STOP;
-				MT_UD.run(RELEASE);
+				MT_UD.stop();
 			}
 			break;
 		case G_STOP: // Stop
 		default:
-			MT_UD.run(RELEASE);
+			MT_UD.stop();
 			break;
 	}
 }
