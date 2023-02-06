@@ -72,6 +72,8 @@ struct gantryMove {
 gantryMove currentGantryMove = {G_STOP, G_STOP, G_STOP};
 byte lastGantryMove = 0b00000000;
 
+unsigned long stopMoveAt = 0;
+
 // The maximum amount in time in milliseconds the claw can descent towards the prize floor before stopping.
 #define GRAB_DESCENT_TIME_MAX_MS 3000
 

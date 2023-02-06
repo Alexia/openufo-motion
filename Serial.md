@@ -256,6 +256,30 @@ Example, move backward, right, and stop up/down:
 
     move:brs
 
+### Move Gantry, Timed (string, three characters {f|b|s|n}{l|r|s|n}{u|d|s|n}, integer milliseconds)
+
+Instruct the gantry to `move` in the specified direction for a specified about of milliseconds.  The machine will still obey limit switches and stop movement.  The movement will not restart after a limit switch is triggerred.
+CAUTION! Do not use with the cabinet door open.
+
+The data format is three characters corresponding to the three directions of travel.  All directions accept `s` to stop.  All three positions must be sent.  Invalid values will stop that direction, but this should not be relied on as it is undefined behavior and may change in the future.
+
+| Char. | Direction      |
+| ----- | -------------- |
+| f     | forward        |
+| b     | backward       |
+| l     | left           |
+| r     | right          |
+| u     | up             |
+| d     | down           |
+| s     | stop           |
+| n     | null/no change |
+
+The movement duration is specified in milliseconds as the third part.  The current maximum allowed is 1000 milliseconds.
+
+Example, move backward, right, and stop up/down for 100 milliseconds
+
+    move:brs:100
+
 ### Claw Open/Close (integer)
 
 Close or open the claw.

@@ -42,6 +42,7 @@ void initClaw() {
 void doUpdates() {
 	updateSwitches();
 	updateCredits();	// Must happen after updateSwitches();
+	timedMove();		// Must happen before updateGantryMove();
 	updateGantryMove(); // MUST HAPPEN OUTSIDE OF THE STATES!  Otherwise moves or stops may never occur.
 	updateLEDLastMillis();
 	readCom(); // This goes last.
@@ -304,10 +305,24 @@ void processCommands(String shortWord, String parameters) {
 	}
 
 	if (shortWord == "move") {
-		if (parameters.length() == 3) {
-			String fb = parameters.substring(0, 1);
-			String lr = parameters.substring(1, 2);
-			String ud = parameters.substring(2, 3);
+		int splitPos = parameters.indexOf(":");
+		String direction;
+		String millisString;
+		unsigned long milliseconds;
+		bool timedMove = false;
+		if (splitPos > 0) {
+			direction = parameters.substring(0, splitPos);
+			millisString = parameters.substring(splitPos + 1);
+			milliseconds = millisString.toInt();
+			milliseconds = constrain(milliseconds, 0, 1000);
+			timedMove = true;
+		} else {
+			direction = parameters;
+		}
+		if (direction.length() == 3) {
+			String fb = direction.substring(0, 1);
+			String lr = direction.substring(1, 2);
+			String ud = direction.substring(2, 3);
 
 			if (fb != "n") {
 				if (fb == "f") {
@@ -340,6 +355,11 @@ void processCommands(String shortWord, String parameters) {
 					currentGantryMove.ud = G_STOP;
 				}
 			}
+
+			if (timedMove) {
+				stopMoveAt = millis() + milliseconds;
+			}
+
 			sendCom("ack", shortWord);
 		}
 	}
@@ -755,6 +775,17 @@ void moveUD(int dir) {
 		default:
 			MT_UD.stop();
 			break;
+	}
+}
+
+void timedMove() {
+	if (stopMoveAt > 0) {
+		if (millis() >= stopMoveAt) {
+			currentGantryMove.fb = G_STOP;
+			currentGantryMove.lr = G_STOP;
+			currentGantryMove.ud = G_STOP;
+			stopMoveAt = 0;
+		}
 	}
 }
 
