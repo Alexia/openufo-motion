@@ -74,9 +74,6 @@ byte lastGantryMove = 0b00000000;
 
 unsigned long stopMoveAt = 0;
 
-// The maximum amount in time in milliseconds the claw can descent towards the prize floor before stopping.
-#define GRAB_DESCENT_TIME_MAX_MS 3000
-
 // Drop button LED state and millisecond tracker for all LEDs.
 //  0 - Off
 //  1 - Flashing
@@ -98,6 +95,5 @@ bool creditSwitchPressed = false;
 // Play time out.
 //  0 - Infinite
 //  x - Milliseconds
-#define DEFAULT_PLAY_TIME_LIMIT 60000
 unsigned long playTimeLimit = DEFAULT_PLAY_TIME_LIMIT;
 unsigned long playStartMillis = 0;

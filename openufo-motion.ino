@@ -120,6 +120,7 @@ void loop() {
 			if (PLAYER_F || PLAYER_B || PLAYER_L || PLAYER_R) {
 				subtractCredit(1);
 				playStartMillis = millis();
+				sendCom("time", (String)(playTimeLimit / 1000));
 				changeState(STATE_PLAYER_CONTROL);
 			}
 			break;
@@ -293,6 +294,12 @@ void processCommands(String shortWord, String parameters) {
 			if (setting == "spud") {
 				gantryUDSpeed = constrain(value.toInt(), MINIMUM_SPEED, 255);
 				setGantrySpeed();
+				set = true;
+			}
+
+			// Gantry UD Speed
+			if (setting == "time") {
+				playTimeLimit = constrain(value.toInt(), 10, 120) * 1000;
 				set = true;
 			}
 		}
@@ -808,6 +815,7 @@ void doGrab() {
 	updateGantryMove();
 
 	moveClaw(1);
+	delay(CLAW_DWELL_MS); // Short delay to let the claw get into place.
 }
 
 // 1 = Close

@@ -152,6 +152,14 @@ Example, 10011001:
     splr:153
     spud:153
 
+#### Play Time (integer)
+
+Indicates the remaining play time.  Current only sends when the timer starts counting down.
+
+Example, 10:
+
+    time:10
+
 ### Error (string)
 
 Unrecoverable error states.
@@ -212,6 +220,14 @@ Set the strength of the claw.
 Example, 10011001:
 
     set:clst:153
+
+#### Set Play Time (integer)
+
+Set the maximum play time in seconds.
+
+Example, 10:
+
+    set:time:10
 
 ### Save to EEPROM (null, reserved)
 

@@ -58,3 +58,14 @@
 
 // Prize Detect
 #define SW_PRIZE_DETECT_PIN 39
+
+// The maximum amount in time in milliseconds the claw can descent towards the prize floor before stopping.
+#define GRAB_DESCENT_TIME_MAX_MS 2500
+
+// Amount of milliseconds to pause after closing the claw at the bottom of the grab descent.
+#define CLAW_DWELL_MS 500
+
+// Play time out.
+//  0 - Infinite
+//  x - Milliseconds
+#define DEFAULT_PLAY_TIME_LIMIT 60000
