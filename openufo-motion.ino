@@ -115,6 +115,12 @@ void loop() {
 				digitalWrite(LED_DROP_BUTTON_PIN, flashLEDCurrentState);
 			}
 
+			if (totalCredits == 0) {
+				// If credits are removed by service mode or the controller then go back to attract mode.
+				changeState(STATE_PARKED_ATTRACT);
+				break;
+			}
+
 			// Input allowed from joystick only; triggers transition to STATE_PLAYER_CONTROL.
 			// TODO: This should only transition when moving away from the parked position.  Some machines start from the right.
 			if (PLAYER_F || PLAYER_B || PLAYER_L || PLAYER_R) {
