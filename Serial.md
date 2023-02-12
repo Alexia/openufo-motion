@@ -348,3 +348,12 @@ Park the claw.
 Example:
 
     clpa:
+
+### Status Report
+
+Instructs to return all status information including, but not limited to: `vers`, `stat`, `move`, `insw`, `lisw`, `plsw`, `cred`, `time`
+This short word should be used sparingly and mainly used to synchronize the controller state machine to the motion state machine on load.  This operation can cause blocking interrupts.
+
+Example:
+
+    stre:

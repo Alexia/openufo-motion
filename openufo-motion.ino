@@ -244,7 +244,7 @@ void subtractCredit(uint16_t amount) {
 
 void changeState(int state) {
 	currentState = state;
-	sendCom("stat", (String)state);
+	sendCom("stat", (String)currentState);
 }
 
 void startCom() {
@@ -426,6 +426,18 @@ void processCommands(String shortWord, String parameters) {
 		} else {
 			sendCom("ack", "fail");
 		}
+	}
+
+	if (shortWord == "stre") {
+		sendCom("vers", OPENUFO_VERSION);
+		sendCom("stat", (String)currentState);
+		sendCom("move", (String)lastGantryMove);
+		sendCom("plsw", (String)playerSwitchState);
+		sendCom("lisw", (String)limitSwitchState);
+		sendCom("insw", (String)internalSwitchState);
+		sendCom("cred", (String)totalCredits);
+		sendCom("time", "0"); // TODO: Fix me.
+		sendCom("ack", shortWord);
 	}
 }
 
