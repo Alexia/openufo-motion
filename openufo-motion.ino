@@ -69,6 +69,7 @@ void loop() {
 	switch (currentState) {
 		case STATE_PROGRAM:
 			// Programming mode blocks all other states until it exits.
+			break;
 		case STATE_BOOT:
 			// Tell any listeners the motion controller version.
 			sendCom("vers", OPENUFO_VERSION);
