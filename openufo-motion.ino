@@ -125,10 +125,7 @@ void loop() {
 			// Input allowed from joystick only; triggers transition to STATE_PLAYER_CONTROL.
 			// TODO: This should only transition when moving away from the parked position.  Some machines start from the right.
 			if (PLAYER_F || PLAYER_B || PLAYER_L || PLAYER_R) {
-				subtractCredit(1);
-				playStartMillis = millis();
-				sendCom("time", (String)(playTimeLimit / 1000));
-				changeState(STATE_PLAYER_CONTROL);
+				givePlayerControl();
 			}
 			break;
 		case STATE_PLAYER_CONTROL:
@@ -139,19 +136,22 @@ void loop() {
 				dropButtonLEDState = 2;
 			}
 
-			if (PLAYER_F) {
-				currentGantryMove.fb = G_FORWARD;
-			} else if (PLAYER_B) {
-				currentGantryMove.fb = G_BACKWARD;
-			} else {
-				currentGantryMove.fb = G_STOP;
-			}
-			if (PLAYER_L) {
-				currentGantryMove.lr = G_LEFT;
-			} else if (PLAYER_R) {
-				currentGantryMove.lr = G_RIGHT;
-			} else {
-				currentGantryMove.lr = G_STOP;
+			// Ignore player switch input if a timed move is in progress.
+			if (stopMoveAt == 0) {
+				if (PLAYER_F) {
+					currentGantryMove.fb = G_FORWARD;
+				} else if (PLAYER_B) {
+					currentGantryMove.fb = G_BACKWARD;
+				} else {
+					currentGantryMove.fb = G_STOP;
+				}
+				if (PLAYER_L) {
+					currentGantryMove.lr = G_LEFT;
+				} else if (PLAYER_R) {
+					currentGantryMove.lr = G_RIGHT;
+				} else {
+					currentGantryMove.lr = G_STOP;
+				}
 			}
 
 			// Drop button input triggers transition to STATE_GRABBING.
@@ -246,6 +246,13 @@ void subtractCredit(uint16_t amount) {
 void changeState(int state) {
 	currentState = state;
 	sendCom("stat", (String)currentState);
+}
+
+void givePlayerControl() {
+	subtractCredit(1);
+	playStartMillis = millis();
+	sendCom("time", (String)(playTimeLimit / 1000));
+	changeState(STATE_PLAYER_CONTROL);
 }
 
 void startCom() {
@@ -439,6 +446,14 @@ void processCommands(String shortWord, String parameters) {
 		sendCom("cred", (String)totalCredits);
 		sendCom("time", "0"); // TODO: Fix me.
 		sendCom("ack", shortWord);
+	}
+
+	if (shortWord == "plst") {
+		if (currentState == STATE_PARKED_CREDITS) {
+			givePlayerControl();
+		} else {
+			sendCom("ack", "fail");
+		}
 	}
 }
 
