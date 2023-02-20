@@ -1,4 +1,4 @@
-#define OPENUFO_VERSION "0.0.1"
+#define OPENUFO_VERSION "0.0.2"
 
 // Motor_Directions_Function_PIN
 #define MT_FB_E_PIN 8
@@ -60,7 +60,7 @@
 #define SW_PRIZE_DETECT_PIN 39
 
 // The maximum amount in time in milliseconds the claw can descent towards the prize floor before stopping.
-#define GRAB_DESCENT_TIME_MAX_MS 2500
+#define GRAB_DESCENT_TIME_MAX_MS 2100
 
 // Amount of milliseconds to pause after closing the claw at the bottom of the grab descent.
 #define CLAW_DWELL_MS 500

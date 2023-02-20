@@ -156,10 +156,7 @@ void loop() {
 
 			// Drop button input triggers transition to STATE_GRABBING.
 			if (PLAYER_D || millis() - playStartMillis >= playTimeLimit) {
-				playStartMillis = 0;
-				currentGantryMove.fb = G_STOP;
-				currentGantryMove.lr = G_STOP;
-				changeState(STATE_GRAB);
+				endPlayerControl();
 			}
 			break;
 		case STATE_GRAB:
@@ -253,6 +250,13 @@ void givePlayerControl() {
 	playStartMillis = millis();
 	sendCom("time", (String)(playTimeLimit / 1000));
 	changeState(STATE_PLAYER_CONTROL);
+}
+
+void endPlayerControl() {
+	playStartMillis = 0;
+	currentGantryMove.fb = G_STOP;
+	currentGantryMove.lr = G_STOP;
+	changeState(STATE_GRAB);
 }
 
 void startCom() {
@@ -455,6 +459,14 @@ void processCommands(String shortWord, String parameters) {
 			sendCom("ack", "fail");
 		}
 	}
+
+	if (shortWord == "plen") {
+		if (currentState == STATE_PLAYER_CONTROL) {
+			endPlayerControl();
+		} else {
+			sendCom("ack", "fail");
+		}
+	}
 }
 
 void updateSwitches() {
@@ -635,11 +647,19 @@ bool parkClaw() {
 	unsigned long startMillis = millis();
 	unsigned long currentMillis = startMillis;
 
+	// Sometimes a prize is won during the parking proceedure.  This helps with notifying the controller.
+	bool prizeDetected = false;
+
 	currentGantryMove.ud = G_UP;
 
 	while (!isClawParked() && currentMillis - startMillis < 6000) {
 		currentMillis = millis();
 		doUpdates(); // If we are blocking the main loop we have to call doUpdates().
+
+		if (isPrizeDetected() && !prizeDetected) {
+			sendCom("prde", "1");
+			prizeDetected = true;
+		}
 
 		if (isClawParked()) {
 			break;
@@ -672,12 +692,20 @@ bool parkGantry() {
 	unsigned long startMillis = millis();
 	unsigned long currentMillis = startMillis;
 
+	// Sometimes a prize is won during the parking proceedure.  This helps with notifying the controller.
+	bool prizeDetected = false;
+
 	currentGantryMove.fb = G_FORWARD;
 	currentGantryMove.lr = G_LEFT;
 
 	while (!isGantryParked() && currentMillis - startMillis < 4000) {
 		currentMillis = millis();
 		doUpdates(); // If we are blocking the main loop we have to call doUpdates().
+
+		if (isPrizeDetected() && !prizeDetected) {
+			sendCom("prde", "1");
+			prizeDetected = true;
+		}
 
 		if (isGantryParked()) {
 			break;

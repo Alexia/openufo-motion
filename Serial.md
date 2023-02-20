@@ -360,9 +360,18 @@ Example:
 
 ### Play Start
 
-Transitions the state from STATE_PARKED_CREDITS to STATE_PLAYER_CONTROL to begin the play seesion.  This is used for remote control from the controller issuing move commands.  This command only works if the current state is STATE_PARKED_CREDITS.
+Transitions the state from STATE_PARKED_CREDITS to STATE_PLAYER_CONTROL to begin the play session.  This is used for remote control from the controller issuing move commands.  This command only works if the current state is STATE_PARKED_CREDITS.
 Internally the state machine normally transitions from STATE_PARKED_CREDITS to STATE_PLAYER_CONTROL only when input is detected from the player switches.
 
 Example:
 
     plst:
+
+### Play End
+
+Transitions the state from STATE_PLAYER_CONTROL to STATE_GRAB to end the play seesion.  This is used for remote control from the controller issuing move commands.  This command only works if the current state is STATE_PLAYER_CONTROL.
+Internally the state machine normally transitions from STATE_PLAYER_CONTROL to STATE_GRAB only when input is detected from the player drop switch.
+
+Example:
+
+    plen:
